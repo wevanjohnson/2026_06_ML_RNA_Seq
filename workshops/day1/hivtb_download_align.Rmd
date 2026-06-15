@@ -84,7 +84,7 @@ cd $HOME/tmp/
 ##asthma SRR list
 asthma_srr=/projects/community/classes/bmihai_camp/SRR_fastqs/SRR_Acc_List_asthma.txt
 
-accs=( $( cat SRR_Acc_List_asthma.txt ) )
+accs=( $( cat $asthma_srr ) )
 for i in $(seq 0 ${#accs[@]}) 
 do 
 	fastq-dump ${accs[i]};
@@ -116,7 +116,7 @@ module load sratoolkit
 ##asthma SRR list
 asthma_srr=/projects/community/classes/bmihai_camp/SRR_fastqs/SRR_Acc_List_asthma.txt
 
-accs=( $( cat SRR_Acc_List_asthma.txt ) )
+accs=( $( cat $asthma_srr ) )
 acc_number=${accs[$SLURM_ARRAY_TASK_ID]}
 
 fastq-dump --gzip $acc_number
@@ -146,9 +146,9 @@ module use /projects/community/modulefiles
 module load sratoolkit
 
 ##asthma SRR list
-asthma_srr=/projects/community/classes/bmihai_camp/SRR_fastqs/SRR_Acc_List_hivtb.txt
+hivtb_srr=/projects/community/classes/bmihai_camp/SRR_fastqs/SRR_Acc_List_hivtb.txt
 
-accs=( $( cat SRR_Acc_List_hivtb.txt ) )
+accs=( $( cat $hivtb_srr ) )
 acc_number=${accs[$SLURM_ARRAY_TASK_ID]}
 
 fastq-dump --gzip $acc_number
@@ -246,7 +246,7 @@ module load STAR
 asthma_srr=/projects/community/classes/bmihai_camp/SRR_fastqs/SRR_Acc_List_hivtb.txt
 
 # Read accession list and select the task's SRR number
-accs=( $(cat $SLURM_SUBMIT_DIR/SRR_Acc_List_hivtb.txt) )
+accs=( $(cat $asthma_srr) )
 acc_number=${accs[$SLURM_ARRAY_TASK_ID]}
 
 # Download FASTQ
