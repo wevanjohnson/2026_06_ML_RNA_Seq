@@ -12,25 +12,6 @@ editor_options:
   chunk_output_type: console
 ---
 
-## Set up: load these packages!
-```{r setup, include=F}
-suppressMessages({
-  library(umap)
-  library(DT)
-  library(tidyverse)
-  library(SummarizedExperiment)
-  library(TBSignatureProfiler)
-})
-```
-
-```{r, eval=F}
-library(umap)
-library(DT)
-library(tidyverse)
-library(SummarizedExperiment)
-library(TBSignatureProfiler)
-```
-
 ## SRA - Sequencing Read Archive
 
 - Raw sequencing data and alignment info
@@ -53,6 +34,9 @@ Download via:
 [Download a file for an asthma host microbiome dataset](https://pubmed.ncbi.nlm.nih.gov/26277095/)
 
 ```{bash, eval=F}
+## use the community pages
+module use /projects/community/modulefiles
+
 ## attach the sratoolkit
 module load sratoolkit
 
@@ -71,7 +55,10 @@ gzip $acc.fastq
 
 [Download all files for an asthma host microbiome dataset](https://pubmed.ncbi.nlm.nih.gov/26277095/)
 ```{bash, eval=F}
-accs=( $( cat SRR_Acc_List_asthma.txt ) )
+##asthma SRR list
+asthma_srr=/projects/community/classes/bmihai_camp/SRR_fastqs/SRR_Acc_List_asthma.txt
+
+accs=( $( cat $asthma_srr ) )
 for i in $(seq 0 ${#accs[@]}) 
 do 
 	fastq-dump ${accs[i]};
@@ -86,9 +73,16 @@ done
 #SBATCH --job-name=microbiome_download
 #SBATCH --mem=1G
 #SBATCH --time=01:00:00
+#SBATCH --reservation=bmihai-bootcamp-june2026
+#SBATCH --partition=main-redhat
 
+## use the community pages
+module use /projects/community/modulefiles
 module load sratoolkit
 cd $HOME/tmp/
+
+##asthma SRR list
+asthma_srr=/projects/community/classes/bmihai_camp/SRR_fastqs/SRR_Acc_List_asthma.txt
 
 accs=( $( cat SRR_Acc_List_asthma.txt ) )
 for i in $(seq 0 ${#accs[@]}) 
@@ -109,11 +103,18 @@ Save as a file and use `sbatch` to submit
 #SBATCH --cpus-per-task=1
 #SBATCH --mem=1G
 #SBATCH --time=00:20:00
+#SBATCH --reservation=bmihai-bootcamp-june2026
+#SBATCH --partition=main-redhat
 
 mkdir -p /scratch/$USER/asthma_data
 cd /scratch/$USER/asthma_data
 
+## use the community pages
+module use /projects/community/modulefiles
 module load sratoolkit
+
+##asthma SRR list
+asthma_srr=/projects/community/classes/bmihai_camp/SRR_fastqs/SRR_Acc_List_asthma.txt
 
 accs=( $( cat SRR_Acc_List_asthma.txt ) )
 acc_number=${accs[$SLURM_ARRAY_TASK_ID]}
@@ -132,11 +133,20 @@ Save as a file and use `sbatch` to submit
 #SBATCH --cpus-per-task=1
 #SBATCH --mem=1G
 #SBATCH --time=00:20:00
+#SBATCH --reservation=bmihai-bootcamp-june2026
+#SBATCH --partition=main-redhat
+#SBATCH --reservation=bmihai-bootcamp-june2026
+#SBATCH --partition=main-redhat
 
 mkdir -p /scratch/$USER/hivtb_data
 cd /scratch/$USER/hivtb_data
 
+## use the community pages
+module use /projects/community/modulefiles
 module load sratoolkit
+
+##asthma SRR list
+asthma_srr=/projects/community/classes/bmihai_camp/SRR_fastqs/SRR_Acc_List_hivtb.txt
 
 accs=( $( cat SRR_Acc_List_hivtb.txt ) )
 acc_number=${accs[$SLURM_ARRAY_TASK_ID]}
@@ -176,6 +186,8 @@ multiqc .
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=32G
 #SBATCH --time=04:00:00
+#SBATCH --reservation=bmihai-bootcamp-june2026
+#SBATCH --partition=main-redhat
 
 # Define variables
 GENOME_DIR=/scratch/$USER/star_index
@@ -213,10 +225,13 @@ STAR --runThreadN 8 \
 #SBATCH --cpus-per-task=4
 #SBATCH --mem=12G
 #SBATCH --time=01:00:00
+#SBATCH --reservation=bmihai-bootcamp-june2026
+#SBATCH --partition=main-redhat
 
 # Set paths
 WORKDIR=/scratch/$USER/hivtb_data
-GENOME_INDEX=/scratch/$USER/star_index/human_STAR_GRCh38.primary_assembly.genome.fa  # <-- UPDATE this path if needed
+#GENOME_INDEX=/scratch/$USER/star_index/human_STAR_GRCh38.primary_assembly.genome.fa  # <-- UPDATE this path if needed
+GENOME_INDEX=/projects/community/classes/bmihai_camp/STAR_index_human
 
 # Create and move to working directory
 mkdir -p $WORKDIR
@@ -226,6 +241,9 @@ cd $WORKDIR
 module load sratoolkit
 module load FastQC
 module load STAR
+
+##asthma SRR list
+asthma_srr=/projects/community/classes/bmihai_camp/SRR_fastqs/SRR_Acc_List_hivtb.txt
 
 # Read accession list and select the task's SRR number
 accs=( $(cat $SLURM_SUBMIT_DIR/SRR_Acc_List_hivtb.txt) )
