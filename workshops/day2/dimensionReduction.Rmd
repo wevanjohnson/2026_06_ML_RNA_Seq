@@ -346,9 +346,15 @@ suppressMessages({
   library(ComplexHeatmap)
 })
 
-## Grouping variable and a filtered count matrix (shared by all three methods)
-group <- as.factor(meta_data$disease_status)
-counts_filt <- counts[rowSums(counts) > 100, ]
+## Compare TB-HIV vs HIV: subset to those two groups (drop TB-HIV-ART)
+keep <- meta_data$disease_status %in% c("TB-HIV", "HIV")
+counts_sub <- counts[, keep]
+meta_sub <- meta_data[keep, ]
+## HIV as the reference level, so a positive logFC means up in TB-HIV
+meta_sub$disease_status <- factor(meta_sub$disease_status,
+                                  levels = c("HIV", "TB-HIV"))
+group <- meta_sub$disease_status
+counts_filt <- counts_sub[rowSums(counts_sub) > 100, ]
 design <- model.matrix(~group)
 
 ## ---- edgeR (negative binomial GLM, quasi-likelihood F-test) ----
@@ -356,16 +362,15 @@ dge <- DGEList(counts = counts_filt, group = group)
 dge <- calcNormFactors(dge)                 ## TMM normalization
 dge <- estimateDisp(dge, design)            ## common/trended/tagwise dispersion
 fit_edger <- glmQLFit(dge, design)
-qlf <- glmQLFTest(fit_edger, coef = 2)
+qlf <- glmQLFTest(fit_edger, coef = 2)       ## coef 2 = TB-HIV vs HIV
 edger_top <- rownames(topTags(qlf, n = 100))
 
 ## ---- DESeq2 (negative binomial GLM) ----
-meta_data$disease_status <- as.factor(meta_data$disease_status)
 dds <- DESeqDataSetFromMatrix(countData = counts_filt,
-                              colData = meta_data,
+                              colData = meta_sub,
                               design = ~disease_status)
 dds <- DESeq(dds)
-res <- results(dds)
+res <- results(dds, contrast = c("disease_status", "TB-HIV", "HIV"))
 deseq_top <- rownames(res[order(res$padj), ])[1:100]
 
 ## ---- limma-voom (mean-variance weighting + linear models) ----
@@ -380,14 +385,14 @@ sapply(deg_lists, length)                    ## genes per method
 common_degs <- Reduce(intersect, deg_lists)  ## shared across all three
 length(common_degs)
 
-## ---- Heatmap of DEGs ----
-mat <- as.matrix(assay(se_hivtb, "log_counts_cpm"))[deseq_top, ]
+## ---- Heatmap of DEGs (TB-HIV vs HIV samples only) ----
+se_sub <- se_hivtb[, keep]
+mat <- as.matrix(assay(se_sub, "log_counts_cpm"))[deseq_top, ]
 mat <- t(scale(t(mat)))                       ## scale gene expression by row
-df <- data.frame(Disease = colData(se_hivtb)$disease_status)
+df <- data.frame(Disease = colData(se_sub)$disease_status)
 ha <- HeatmapAnnotation(df = df,
         col = list(Disease = c("TB-HIV" = "Red",
-                               "HIV" = "Blue",
-                               "TB-HIV-ART" = "Green")))
+                               "HIV" = "Blue")))
 Heatmap(mat, show_row_names = FALSE, show_column_names = FALSE,
         top_annotation = ha)
 ```
