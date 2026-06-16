@@ -1,0 +1,159 @@
+---
+title: "Generating a Count Matrix with featureCounts"
+author: W. Evan Johnson
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    code_folding: show
+    toc: true
+    toc_float: true
+    theme: "flatly"
+editor_options:
+  chunk_output_type: console
+---
+
+## From alignments to counts
+
+In the previous workshop we downloaded the HIV/TB FASTQ files and aligned
+them to the human genome with **STAR**, producing one sorted BAM file per
+sample. To analyze the data we need to summarize those alignments into a
+**gene-by-sample count matrix**.
+
+We use **featureCounts** (part of the [Subread](https://subread.sourceforge.net/)
+package) to count, for each gene, how many sequencing reads align to it in
+each sample.
+
+## Set up Subread (featureCounts)
+
+Subread is pre-installed in the bootcamp community space. The helper script
+below adds `featureCounts` to your `PATH` (by appending to `~/.bashrc`) so it
+is available every time you log in. It is safe to run more than once -- it
+only adds the path if it is not already present.
+
+Save this as `get_featureCounts_subread.sh` and run it with
+`bash get_featureCounts_subread.sh`:
+
+```{bash, eval=F}
+#!/bin/bash
+
+# Path to be added
+SUBREAD_PATH="/projects/community/classes/bmihai_camp/apps/subread-2.0.3-Linux-x86_64/bin"
+
+# Check if the path is already in .bashrc
+if ! grep -Fxq "export PATH=\$PATH:$SUBREAD_PATH" ~/.bashrc; then
+    echo "" >> ~/.bashrc
+    echo "# Add Subread (featureCounts) to PATH" >> ~/.bashrc
+    echo "export PATH=\$PATH:$SUBREAD_PATH" >> ~/.bashrc
+    echo "Subread path added to ~/.bashrc."
+else
+    echo "Subread path already present in ~/.bashrc."
+fi
+
+source ~/.bashrc
+```
+
+Confirm it worked:
+
+```{bash, eval=F}
+featureCounts -v
+```
+
+## Run featureCounts
+
+This command counts reads for **all** sorted BAM files at once and writes a
+single counts table. Save it as `run_featureCounts.sh`:
+
+```{bash, eval=F}
+#!/bin/bash
+
+featureCounts -g gene_name -t gene -O --fraction -T 32  \
+  -a /projects/community/classes/bmihai_camp/STAR_index_human/gencode.v47.primary_assembly.annotation.gtf \
+  -o /scratch/$USER/hivtb_data/counts_table.txt \
+  $(printf "%s " /scratch/$USER/hivtb_data/aligned/*.sorted.bam)
+```
+
+### What the options mean
+
+| Option | Meaning |
+|--------|---------|
+| `-g gene_name` | Group features by the `gene_name` attribute in the GTF (column names become gene symbols) |
+| `-t gene` | Count reads over features of type `gene` |
+| `-O` | Assign reads that overlap more than one feature to **all** of them |
+| `--fraction` | Split multi-overlapping/multi-mapping reads fractionally instead of counting them whole |
+| `-T 32` | Use 32 threads |
+| `-a ...gtf` | Path to the GENCODE annotation (GTF) used for the STAR index |
+| `-o ...counts_table.txt` | Output count matrix (plus a `.summary` file) |
+| `$(printf ... *.sorted.bam)` | Expands to the list of all sorted BAM files to quantify |
+
+## Run it as a SLURM batch job
+
+`featureCounts` is multi-threaded, so submit it as a single batch job rather
+than running it on the login node. Save the following and submit with
+`sbatch`:
+
+```{bash, eval=F}
+#!/bin/bash
+#SBATCH --job-name=hivtb_featurecounts
+#SBATCH --output=featurecounts.out
+#SBATCH --cpus-per-task=32
+#SBATCH --mem=32G
+#SBATCH --time=02:00:00
+#SBATCH --reservation=bmihai-bootcamp-june2026
+#SBATCH --partition=main-redhat
+
+cd /scratch/$USER/hivtb_data
+
+# Make featureCounts available (or run get_featureCounts_subread.sh first)
+export PATH=$PATH:/projects/community/classes/bmihai_camp/apps/subread-2.0.3-Linux-x86_64/bin
+
+featureCounts -g gene_name -t gene -O --fraction -T 32 \
+  -a /projects/community/classes/bmihai_camp/STAR_index_human/gencode.v47.primary_assembly.annotation.gtf \
+  -o /scratch/$USER/hivtb_data/counts_table.txt \
+  $(printf "%s " /scratch/$USER/hivtb_data/aligned/*.sorted.bam)
+```
+
+## Inspect and clean the output
+
+`featureCounts` writes two files:
+
+- `counts_table.txt` -- the count matrix
+- `counts_table.txt.summary` -- per-sample assignment statistics
+
+The matrix begins with a header comment line and several annotation columns
+(`Geneid`, `Chr`, `Start`, `End`, `Strand`, `Length`) before the per-sample
+count columns. The BAM file path is used as each sample's column name, so the
+columns usually need to be tidied (drop the annotation columns and shorten the
+sample names) to produce the `features_combined.txt` used in the downstream
+analysis.
+
+```{bash, eval=F}
+# Peek at the first few rows/columns
+head counts_table.txt
+
+# Check how many reads were assigned per sample
+column -t counts_table.txt.summary | head
+```
+
+A quick tidy in R:
+
+```{r, eval=F}
+counts <- read.table("counts_table.txt", header = TRUE, row.names = 1,
+                     sep = "\t", check.names = FALSE)
+
+## Drop the annotation columns; keep only the per-sample count columns
+counts <- counts[, -(1:5)]
+
+## Shorten BAM paths to clean sample names (edit the pattern to match yours)
+colnames(counts) <- sub(".*/", "", colnames(counts))
+colnames(counts) <- sub(".sorted.bam$", "", colnames(counts))
+
+write.table(counts, "features_combined.txt", sep = "\t", quote = FALSE)
+```
+
+The resulting `features_combined.txt` is the starting point for the
+dimension-reduction and differential-expression analyses.
+
+## Session Info
+```{r session}
+sessionInfo()
+```
