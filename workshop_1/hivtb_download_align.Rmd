@@ -8,9 +8,29 @@ output:
     toc: true
     toc_float: true
     theme: "flatly"
-editor_options: 
+editor_options:
   chunk_output_type: console
 ---
+
+## Overview
+
+This workshop walks through the first half of an RNA-seq pipeline on the
+Rutgers **Amarel** HPC cluster, using the HIV/TB dataset from
+[Verma, et al., 2018](https://bmcinfectdis.biomedcentral.com/articles/10.1186/s12879-018-3127-4).
+The steps are:
+
+1. **Download** raw sequencing reads (FASTQ) from the SRA
+2. **Quality control** with FastQC and MultiQC
+3. **Align** reads to the human genome with STAR (producing sorted BAM files)
+
+The next workshop (`hivtb_featureCounts`) picks up from those BAM files and
+summarizes them into a gene-by-sample count matrix.
+
+Most steps are run as **SLURM batch jobs** submitted with `sbatch`. When a
+step runs once per sample, we use a SLURM **array job** so all samples are
+processed in parallel. The `#SBATCH` lines at the top of each script request
+the resources (memory, time, CPUs) and, for array jobs, the range of sample
+indices (e.g. `--array=0-32` for the 33 HIV/TB samples).
 
 ## SRA - Sequencing Read Archive
 
@@ -93,7 +113,13 @@ done
 ```
 Save as a file and use `sbatch` to submit
 
-## Download all files in parallel using batch batch array in SLURM
+## Download all files in parallel using a SLURM array job
+
+A SLURM **array job** launches many copies of the same script at once, one per
+array index. Each task looks up the accession at its own index
+(`${accs[$SLURM_ARRAY_TASK_ID]}`) and downloads only that file, so all samples
+download in parallel instead of one after another. This is much faster than the
+serial loop above.
 
 ```{bash, eval=F}
 #!/bin/bash
@@ -125,6 +151,11 @@ fastq-dump --gzip $acc_number
 Save as a file and use `sbatch` to submit
 
 ## Download the HIV TB dataset
+
+This is the dataset we use for the rest of the bootcamp: 33 samples, so the
+array runs over indices `0-32`. The accession list (`SRR_Acc_List_hivtb.txt`)
+is already in the course folder.
+
 ```{bash, eval=F}
 #!/bin/bash
 #SBATCH --job-name=hivtb_download
@@ -135,8 +166,6 @@ Save as a file and use `sbatch` to submit
 #SBATCH --time=00:20:00
 #SBATCH --reservation=bmihai-bootcamp-june2026
 #SBATCH --partition=main-redhat
-#SBATCH --reservation=bmihai-bootcamp-june2026
-#SBATCH --partition=main-redhat
 
 mkdir -p /scratch/$USER/hivtb_data
 cd /scratch/$USER/hivtb_data
@@ -145,7 +174,7 @@ cd /scratch/$USER/hivtb_data
 module use /projects/community/modulefiles
 module load sratoolkit
 
-##asthma SRR list
+## HIV/TB SRR list
 hivtb_srr=/projects/community/classes/bmihai_camp/SRR_fastqs/SRR_Acc_List_hivtb.txt
 
 accs=( $( cat $hivtb_srr ) )
@@ -155,6 +184,10 @@ fastq-dump --gzip $acc_number
 ```
 
 ## Generate FastQC reports
+
+**FastQC** produces a per-sample HTML report of read quality -- per-base
+quality scores, adapter content, duplication levels, GC content, and more --
+so you can spot problems before alignment.
 
 ```{bash, eval=F}	
 module load FastQC
@@ -168,6 +201,10 @@ fastqc $acc_number.fastq.gz --outdir=fastqc/
 ```
 
 ## Generate a MultiQC report
+
+**MultiQC** scans a directory and aggregates all the individual FastQC reports
+into a single interactive summary, making it easy to compare quality metrics
+across all samples at once.
 ```{bash, eval=F}
 module load miniconda
 pip install multiqc
@@ -178,7 +215,21 @@ multiqc .
 
 ## STAR Alignment
 
+**STAR** is a fast, splice-aware aligner that maps RNA-seq reads to the
+reference genome -- accounting for reads that span exon-exon junctions. The
+workflow is two stages: first build (or reuse) a **genome index**, then align
+each sample against it to produce a coordinate-sorted **BAM** file.
+
 ### Download and index the human genome
+
+> **You do not need to run this step.** A pre-built STAR index for the human
+> genome is already provided in the course group folder at
+> `/projects/community/classes/bmihai_camp/STAR_index_human` (this is the
+> `GENOME_INDEX` path used in the alignment script below). The script here is
+> included only so you can see **how that index was generated** -- building it
+> downloads the genome FASTA and GTF and takes several hours and ~32 GB of
+> memory, which is why we share a completed copy.
+
 ```{bash, eval=F}
 #!/bin/bash
 #SBATCH --job-name=build_star_index
@@ -217,6 +268,11 @@ STAR --runThreadN 8 \
 
 ### Complete SLURM script
 
+The script below combines all per-sample steps -- download, FastQC, and STAR
+alignment -- into a single array job, so each of the 33 samples is processed
+end-to-end in parallel. Note that `GENOME_INDEX` points to the shared pre-built
+index described above, so no indexing happens here.
+
 ```{bash, eval=F}
 #!/bin/bash
 #SBATCH --job-name=hivtb_align
@@ -242,11 +298,11 @@ module load sratoolkit
 module load FastQC
 module load STAR
 
-##asthma SRR list
-asthma_srr=/projects/community/classes/bmihai_camp/SRR_fastqs/SRR_Acc_List_hivtb.txt
+## HIV/TB SRR list
+hivtb_srr=/projects/community/classes/bmihai_camp/SRR_fastqs/SRR_Acc_List_hivtb.txt
 
 # Read accession list and select the task's SRR number
-accs=( $(cat $asthma_srr) )
+accs=( $(cat $hivtb_srr) )
 acc_number=${accs[$SLURM_ARRAY_TASK_ID]}
 
 # Download FASTQ

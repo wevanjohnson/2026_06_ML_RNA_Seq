@@ -11,7 +11,7 @@
 
 <meta name="author" content="W. Evan Johnson" />
 
-<meta name="date" content="2026-06-15" />
+<meta name="date" content="2026-06-16" />
 
 <title>RNA-Seq Alignment Example</title>
 
@@ -1587,11 +1587,35 @@ border-radius: 0px;
 
 <h1 class="title toc-ignore">RNA-Seq Alignment Example</h1>
 <h4 class="author">W. Evan Johnson</h4>
-<h4 class="date">2026-06-15</h4>
+<h4 class="date">2026-06-16</h4>
 
 </div>
 
 
+<div id="overview" class="section level2">
+<h2>Overview</h2>
+<p>This workshop walks through the first half of an RNA-seq pipeline on
+the Rutgers <strong>Amarel</strong> HPC cluster, using the HIV/TB
+dataset from <a href="https://bmcinfectdis.biomedcentral.com/articles/10.1186/s12879-018-3127-4">Verma,
+et al., 2018</a>. The steps are:</p>
+<ol style="list-style-type: decimal">
+<li><strong>Download</strong> raw sequencing reads (FASTQ) from the
+SRA</li>
+<li><strong>Quality control</strong> with FastQC and MultiQC</li>
+<li><strong>Align</strong> reads to the human genome with STAR
+(producing sorted BAM files)</li>
+</ol>
+<p>The next workshop (<code>hivtb_featureCounts</code>) picks up from
+those BAM files and summarizes them into a gene-by-sample count
+matrix.</p>
+<p>Most steps are run as <strong>SLURM batch jobs</strong> submitted
+with <code>sbatch</code>. When a step runs once per sample, we use a
+SLURM <strong>array job</strong> so all samples are processed in
+parallel. The <code>#SBATCH</code> lines at the top of each script
+request the resources (memory, time, CPUs) and, for array jobs, the
+range of sample indices (e.g. <code>--array=0-32</code> for the 33
+HIV/TB samples).</p>
+</div>
 <div id="sra---sequencing-read-archive" class="section level2">
 <h2>SRA - Sequencing Read Archive</h2>
 <ul>
@@ -1679,8 +1703,13 @@ do
 done</code></pre>
 <p>Save as a file and use <code>sbatch</code> to submit</p>
 </div>
-<div id="download-all-files-in-parallel-using-batch-batch-array-in-slurm" class="section level2">
-<h2>Download all files in parallel using batch batch array in SLURM</h2>
+<div id="download-all-files-in-parallel-using-a-slurm-array-job" class="section level2">
+<h2>Download all files in parallel using a SLURM array job</h2>
+<p>A SLURM <strong>array job</strong> launches many copies of the same
+script at once, one per array index. Each task looks up the accession at
+its own index (<code>${accs[$SLURM_ARRAY_TASK_ID]}</code>) and downloads
+only that file, so all samples download in parallel instead of one after
+another. This is much faster than the serial loop above.</p>
 <pre class="bash"><code>#!/bin/bash
 #SBATCH --job-name=microbiome_download
 #SBATCH --output=asthma.out
@@ -1709,6 +1738,10 @@ fastq-dump --gzip $acc_number</code></pre>
 </div>
 <div id="download-the-hiv-tb-dataset" class="section level2">
 <h2>Download the HIV TB dataset</h2>
+<p>This is the dataset we use for the rest of the bootcamp: 33 samples,
+so the array runs over indices <code>0-32</code>. The accession list
+(<code>SRR_Acc_List_hivtb.txt</code>) is already in the course
+folder.</p>
 <pre class="bash"><code>#!/bin/bash
 #SBATCH --job-name=hivtb_download
 #SBATCH --output=hivtb.out
@@ -1716,8 +1749,6 @@ fastq-dump --gzip $acc_number</code></pre>
 #SBATCH --cpus-per-task=1
 #SBATCH --mem=1G
 #SBATCH --time=00:20:00
-#SBATCH --reservation=bmihai-bootcamp-june2026
-#SBATCH --partition=main-redhat
 #SBATCH --reservation=bmihai-bootcamp-june2026
 #SBATCH --partition=main-redhat
 
@@ -1728,7 +1759,7 @@ cd /scratch/$USER/hivtb_data
 module use /projects/community/modulefiles
 module load sratoolkit
 
-##asthma SRR list
+## HIV/TB SRR list
 hivtb_srr=/projects/community/classes/bmihai_camp/SRR_fastqs/SRR_Acc_List_hivtb.txt
 
 accs=( $( cat $hivtb_srr ) )
@@ -1738,6 +1769,9 @@ fastq-dump --gzip $acc_number</code></pre>
 </div>
 <div id="generate-fastqc-reports" class="section level2">
 <h2>Generate FastQC reports</h2>
+<p><strong>FastQC</strong> produces a per-sample HTML report of read
+quality – per-base quality scores, adapter content, duplication levels,
+GC content, and more – so you can spot problems before alignment.</p>
 <pre class="bash"><code>module load FastQC
 fastqc *.fastq.gz --outdir=fastqc/</code></pre>
 <p>Or add the following to your SLURM script</p>
@@ -1746,6 +1780,9 @@ fastqc $acc_number.fastq.gz --outdir=fastqc/</code></pre>
 </div>
 <div id="generate-a-multiqc-report" class="section level2">
 <h2>Generate a MultiQC report</h2>
+<p><strong>MultiQC</strong> scans a directory and aggregates all the
+individual FastQC reports into a single interactive summary, making it
+easy to compare quality metrics across all samples at once.</p>
 <pre class="bash"><code>module load miniconda
 pip install multiqc
 cd fastqc/
@@ -1753,8 +1790,24 @@ multiqc .</code></pre>
 </div>
 <div id="star-alignment" class="section level2">
 <h2>STAR Alignment</h2>
+<p><strong>STAR</strong> is a fast, splice-aware aligner that maps
+RNA-seq reads to the reference genome – accounting for reads that span
+exon-exon junctions. The workflow is two stages: first build (or reuse)
+a <strong>genome index</strong>, then align each sample against it to
+produce a coordinate-sorted <strong>BAM</strong> file.</p>
 <div id="download-and-index-the-human-genome" class="section level3">
 <h3>Download and index the human genome</h3>
+<blockquote>
+<p><strong>You do not need to run this step.</strong> A pre-built STAR
+index for the human genome is already provided in the course group
+folder at
+<code>/projects/community/classes/bmihai_camp/STAR_index_human</code>
+(this is the <code>GENOME_INDEX</code> path used in the alignment script
+below). The script here is included only so you can see <strong>how that
+index was generated</strong> – building it downloads the genome FASTA
+and GTF and takes several hours and ~32 GB of memory, which is why we
+share a completed copy.</p>
+</blockquote>
 <pre class="bash"><code>#!/bin/bash
 #SBATCH --job-name=build_star_index
 #SBATCH --output=star_index.out
@@ -1791,6 +1844,11 @@ STAR --runThreadN 8 \
 </div>
 <div id="complete-slurm-script" class="section level3">
 <h3>Complete SLURM script</h3>
+<p>The script below combines all per-sample steps – download, FastQC,
+and STAR alignment – into a single array job, so each of the 33 samples
+is processed end-to-end in parallel. Note that <code>GENOME_INDEX</code>
+points to the shared pre-built index described above, so no indexing
+happens here.</p>
 <pre class="bash"><code>#!/bin/bash
 #SBATCH --job-name=hivtb_align
 #SBATCH --output=hivtb_%A_%a.out
@@ -1815,11 +1873,11 @@ module load sratoolkit
 module load FastQC
 module load STAR
 
-##asthma SRR list
-asthma_srr=/projects/community/classes/bmihai_camp/SRR_fastqs/SRR_Acc_List_hivtb.txt
+## HIV/TB SRR list
+hivtb_srr=/projects/community/classes/bmihai_camp/SRR_fastqs/SRR_Acc_List_hivtb.txt
 
 # Read accession list and select the task&#39;s SRR number
-accs=( $(cat $asthma_srr) )
+accs=( $(cat $hivtb_srr) )
 acc_number=${accs[$SLURM_ARRAY_TASK_ID]}
 
 # Download FASTQ
@@ -1856,7 +1914,7 @@ echo &quot;[$acc_number] STAR alignment completed.&quot;</code></pre>
 ## LAPACK: /Library/Frameworks/R.framework/Versions/4.5-arm64/Resources/lib/libRlapack.dylib;  LAPACK version 3.12.1
 ## 
 ## locale:
-## [1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+## [1] en_US/en_US/en_US/C/en_US/en_US
 ## 
 ## time zone: America/New_York
 ## tzcode source: internal
@@ -1865,12 +1923,11 @@ echo &quot;[$acc_number] STAR alignment completed.&quot;</code></pre>
 ## [1] stats     graphics  grDevices utils     datasets  methods   base     
 ## 
 ## loaded via a namespace (and not attached):
-##  [1] digest_0.6.39     R6_2.6.1          fastmap_1.2.0     xfun_0.58        
-##  [5] cachem_1.1.0      knitr_1.51        htmltools_0.5.9   rmarkdown_2.31   
-##  [9] lifecycle_1.0.5   cli_3.6.6         sass_0.4.10       jquerylib_0.1.4  
-## [13] compiler_4.5.2    rstudioapi_0.19.0 tools_4.5.2       evaluate_1.0.5   
-## [17] bslib_0.11.0      yaml_2.3.12       otel_0.2.0        jsonlite_2.0.0   
-## [21] rlang_1.2.0</code></pre>
+##  [1] digest_0.6.39   R6_2.6.1        fastmap_1.2.0   xfun_0.58      
+##  [5] cachem_1.1.0    knitr_1.51      htmltools_0.5.9 rmarkdown_2.31 
+##  [9] lifecycle_1.0.5 cli_3.6.6       sass_0.4.10     jquerylib_0.1.4
+## [13] compiler_4.5.2  tools_4.5.2     evaluate_1.0.5  bslib_0.11.0   
+## [17] yaml_2.3.12     otel_0.2.0      rlang_1.2.0     jsonlite_2.0.0</code></pre>
 </div>
 
 
