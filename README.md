@@ -5,6 +5,15 @@ Center for Biomedical Informatics & Health Artificial Intelligence (BMIHAI).
 
 *Instructor: W. Evan Johnson, Ph.D.*
 
+## When & where
+
+* **Dates:** June 15–19, 2026 (June 19 is virtual)
+* **Location:** Daniel L. Kessler Building, West Lecture Hall, 675 Hoes Lane West, Piscataway, NJ (in person, June 15–18)
+* **Daily times:** 8:00 AM – 5:00 PM, except **June 15** (9:00 AM – 5:00 PM) and **June 19** (9:00 AM – 4:15 PM, virtual)
+* **Building access:** bring your Rutgers ID badge — registered participants have been given card-swipe access.
+* **Parking:** if you do not have an active Rutgers parking pass, contact the BMIHAI team and they will send a sign-up link and parking map.
+* **Food:** breakfast from 7:30 AM and lunch at 12:00 PM each day, provided for the duration of the bootcamp.
+
 ## Things you should know about this bootcamp
 
 * Lots of diverse material and new concepts will be covered.
@@ -18,11 +27,17 @@ Center for Biomedical Informatics & Health Artificial Intelligence (BMIHAI).
 
 ## Setup
 
-Please install **R** and **RStudio** before the bootcamp. Access to the Rutgers **Amarel** HPC cluster will be arranged for the alignment and HPC exercises.
+Please do the following before the bootcamp:
+
+* **Install R and RStudio** on your laptop.
+* **Request an Amarel account** as soon as possible (if you don't already have one) via the OARC Access Request Form — link provided by the BMIHAI team. The hands-on sessions use RStudio and OpenOnDemand hosted on the Rutgers **Amarel** HPC cluster.
+* **Optional preview:** watch the OARC introductory video (link provided by the BMIHAI team) for a brief introduction to the system.
+
+OARC support staff will be available on-site during the bootcamp to help with any last-minute access or technical issues.
 
 ## Schedule
 
-### Monday
+### Monday (June 15)
 
 | Time | Session |
 |------|---------|
@@ -35,7 +50,7 @@ Please install **R** and **RStudio** before the bootcamp. Access to the Rutgers 
 | 2:45 – 4:15 | Dimension reduction methods: PCA, NNMF, and UMAP; Unsupervised machine learning, clustering, and classification |
 | 4:15 – 5:00 | Hands-on experience: Exploring relationships in reduced-dimension data; Heatmaps and clustering examples; Office hours (with RAs) |
 
-### Tuesday
+### Tuesday (June 16)
 
 | Time | Session |
 |------|---------|
@@ -48,7 +63,7 @@ Please install **R** and **RStudio** before the bootcamp. Access to the Rutgers 
 | 2:45 – 4:15 | Hands-on experience |
 | 4:15 – 5:00 | Office hours (with RAs) |
 
-### Wednesday
+### Wednesday (June 17)
 
 | Time | Session |
 |------|---------|
@@ -61,7 +76,7 @@ Please install **R** and **RStudio** before the bootcamp. Access to the Rutgers 
 | 2:45 – 4:15 | Hands-on experience |
 | 4:15 – 5:00 | Office hours (with RAs) |
 
-### Thursday
+### Thursday (June 18)
 
 | Time | Session |
 |------|---------|
@@ -74,7 +89,7 @@ Please install **R** and **RStudio** before the bootcamp. Access to the Rutgers 
 | 2:45 – 4:15 | Hands-on experience: More supervised machine learning on RNA-seq data |
 | 4:15 – 5:00 | Office hours (with RAs) |
 
-### Friday (Holiday: Virtual)
+### Friday (June 19, virtual)
 
 | Time | Session |
 |------|---------|
