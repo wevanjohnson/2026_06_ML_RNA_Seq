@@ -1,0 +1,36 @@
+# ---- macOS ----
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# ---- Microsoft Office temp / lock files ----
+~$*.docx
+~$*.doc
+~$*.pptx
+~$*.xlsx
+
+# ---- R / RStudio ----
+.Rhistory
+.Rapp.history
+.RData
+.Ruserdata
+.Rproj.user/
+*.Rproj
+.Renviron
+
+# ---- RMarkdown / knitr render artifacts ----
+*_files/
+*_cache/
+*.knit.md
+*.utf8.md
+
+# ---- Common large / generated data (uncomment if you don't want these tracked) ----
+# *.bam
+# *.sam
+# *.fastq
+# *.fastq.gz
+# *.fq.gz
+# *.gz
+# *.gtf
+# *.rds
