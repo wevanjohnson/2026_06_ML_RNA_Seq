@@ -275,7 +275,7 @@ Now using an example dataset from: [Verma, et al., 2018](https://bmcinfectdis.bi
 ## read in data
 counts <- read.table("features_combined.txt", 
   sep="\t", header=T, row.names=1)
-meta_data <- read.table("meta_data.txt",
+meta_data <- read.table("hivtb_SRR_metadata.txt",
   sep="\t", header=T, row.names=1)
 ```
 
@@ -327,6 +327,8 @@ g <- umap_plot %>% ggplot(aes(x=V1, y=V2, color=Disease)) +
 
 plot(g)
 ```
+
+4.\  Conduct Differential Expression using DESeq2, EdgeR, and Limma. Create differential expression gene lists for each and compare. Make a Heatmap of your DEGs. 
 
 
 ## Session Info
