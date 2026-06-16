@@ -330,7 +330,7 @@ The TBSignatureProfiler was developed in the Johnson Lab in 2021 to profile new 
 \Large
 ```{r, message=FALSE, results='hide'}
 se_hivtb_2 <- se_hivtb[,
-      colData(se_hivtb)$Disease != "tb_hiv_art"]
+      colData(se_hivtb)$disease_status != "TB-HIV-ART"]
 TBsigs <- TBsignatures[-12] 
 ssgsea_res <- runTBsigProfiler(se_hivtb_2, 
                   useAssay = "log_counts_cpm",
@@ -347,7 +347,7 @@ ssgsea_res <- runTBsigProfiler(se_hivtb_2,
 signatureHeatmap(ssgsea_res, 
         name = "Heatmap of Signatures (ssGSEA)", 
         signatureColNames = names(TBsigs),
-        annotationColNames = c("Disease"),
+        annotationColNames = c("disease_status"),
         scale = TRUE,
         split_heatmap = "none",
         showColumnNames = FALSE)
@@ -359,7 +359,7 @@ signatureHeatmap(ssgsea_res,
 signatureHeatmap(ssgsea_res, 
         name = "Heatmap of Signatures (ssGSEA)", 
         signatureColNames = names(TBsigs),
-        annotationColNames = c("Disease"),
+        annotationColNames = c("disease_status"),
         scale = TRUE,
         split_heatmap = "none",
         showColumnNames = FALSE)
@@ -369,7 +369,7 @@ signatureHeatmap(ssgsea_res,
 ```{r, warning=F, out.height="50%", fig.align='center'}
 signatureBoxplot(ssgsea_res, name="ssGSEA", 
           signatureColNames = names(TBsigs)[c(62,77)],
-          annotationColName = c("Disease"))
+          annotationColName = c("disease_status"))
 ```
 
 
