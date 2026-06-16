@@ -336,7 +336,61 @@ g <- umap_plot %>% ggplot(aes(x=V1, y=V2, color=Disease)) +
 plot(g)
 ```
 
-4.\  Conduct Differential Expression using DESeq2, EdgeR, and Limma. Create differential expression gene lists for each and compare. Make a Heatmap of your DEGs. 
+5.\  Conduct Differential Expression using DESeq2, EdgeR, and Limma. Create differential expression gene lists for each and compare. Make a Heatmap of your DEGs.
+
+```{r, include=F, message=FALSE, warning=FALSE}
+suppressMessages({
+  library(edgeR)
+  library(DESeq2)
+  library(limma)
+  library(ComplexHeatmap)
+})
+
+## Grouping variable and a filtered count matrix (shared by all three methods)
+group <- as.factor(meta_data$disease_status)
+counts_filt <- counts[rowSums(counts) > 100, ]
+design <- model.matrix(~group)
+
+## ---- edgeR (negative binomial GLM, quasi-likelihood F-test) ----
+dge <- DGEList(counts = counts_filt, group = group)
+dge <- calcNormFactors(dge)                 ## TMM normalization
+dge <- estimateDisp(dge, design)            ## common/trended/tagwise dispersion
+fit_edger <- glmQLFit(dge, design)
+qlf <- glmQLFTest(fit_edger, coef = 2)
+edger_top <- rownames(topTags(qlf, n = 100))
+
+## ---- DESeq2 (negative binomial GLM) ----
+meta_data$disease_status <- as.factor(meta_data$disease_status)
+dds <- DESeqDataSetFromMatrix(countData = counts_filt,
+                              colData = meta_data,
+                              design = ~disease_status)
+dds <- DESeq(dds)
+res <- results(dds)
+deseq_top <- rownames(res[order(res$padj), ])[1:100]
+
+## ---- limma-voom (mean-variance weighting + linear models) ----
+v <- voom(dge, design)                      ## reuse edgeR's normalized DGEList
+fit_limma <- lmFit(v, design)
+fit_limma <- eBayes(fit_limma)
+limma_top <- rownames(topTable(fit_limma, coef = 2, number = 100))
+
+## ---- Compare the three DEG lists ----
+deg_lists <- list(edgeR = edger_top, DESeq2 = deseq_top, limma = limma_top)
+sapply(deg_lists, length)                    ## genes per method
+common_degs <- Reduce(intersect, deg_lists)  ## shared across all three
+length(common_degs)
+
+## ---- Heatmap of DEGs ----
+mat <- as.matrix(assay(se_hivtb, "log_counts_cpm"))[deseq_top, ]
+mat <- t(scale(t(mat)))                       ## scale gene expression by row
+df <- data.frame(Disease = colData(se_hivtb)$disease_status)
+ha <- HeatmapAnnotation(df = df,
+        col = list(Disease = c("TB-HIV" = "Red",
+                               "HIV" = "Blue",
+                               "TB-HIV-ART" = "Green")))
+Heatmap(mat, show_row_names = FALSE, show_column_names = FALSE,
+        top_annotation = ha)
+```
 
 
 ## Session Info
