@@ -12,8 +12,9 @@ Center for Biomedical Informatics & Health Artificial Intelligence (BMIHAI).
 * Communication: if you have questions or concerns, please email the instructor at <w.evan.johnson@rutgers.edu>, or the bootcamp team at <BMIHAI_bootcamp@shp.rutgers.edu>.
 * Materials:
     + All materials are posted on GitHub: [https://github.com/wevanjohnson/2026_06_ML_RNA_Seq](https://github.com/wevanjohnson/2026_06_ML_RNA_Seq)
-    + `lectures/` contains the daily slide decks (`.Rmd` source and rendered `.pdf`), organized by day.
-    + `workshops/` contains the hands-on session materials (`.Rmd` source and rendered `.html`).
+    + `lecture_0` holds the foundational R prework; `lecture_1`, `lecture_2`, ... hold the daily slide decks (`.Rmd` source and rendered `.pdf`).
+    + `workshop_1`, `workshop_2`, ... hold the hands-on session materials (`.Rmd` source and rendered `.html`).
+    + `figs/` holds figures shared across multiple lectures (e.g., the slide-background template).
 
 ## Setup
 
