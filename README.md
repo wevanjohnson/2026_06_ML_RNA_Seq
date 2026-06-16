@@ -30,8 +30,8 @@ Center for Biomedical Informatics & Health Artificial Intelligence (BMIHAI).
 Please do the following before the bootcamp:
 
 * **Install R and RStudio** on your laptop.
-* **Request an Amarel account** as soon as possible (if you don't already have one) via the OARC Access Request Form — link provided by the BMIHAI team. The hands-on sessions use RStudio and OpenOnDemand hosted on the Rutgers **Amarel** HPC cluster.
-* **Optional preview:** watch the OARC introductory video (link provided by the BMIHAI team) for a brief introduction to the system.
+* **Request an Amarel account** as soon as possible (if you don't already have one) via the OARC Access Request Form — see the link in the BMIHAI bootcamp emails. The hands-on sessions use RStudio and OpenOnDemand hosted on the Rutgers **Amarel** HPC cluster.
+* **Optional preview:** watch the OARC introductory video (link in the BMIHAI bootcamp emails) for a brief introduction to the system.
 
 OARC support staff will be available on-site during the bootcamp to help with any last-minute access or technical issues.
 
