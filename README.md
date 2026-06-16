@@ -41,7 +41,7 @@ Please install **R** and **RStudio** before the bootcamp. Access to the Rutgers 
 |------|---------|
 | 8:00 – 9:45 | Differential expression analysis |
 | 9:45 – 10:15 | Break |
-| 10:15 – 12:00 | Lasso, ridge regression, and Elastic Net; Regularization and variable selection |
+| 10:15 – 12:00 | Pathway enrichment analysis, gene network analysis |
 | 12:00 – 1:00 | Lunch (provided) |
 | 1:00 – 2:30 | Hands-on experience: Differential gene expression with DESeq2 |
 | 2:30 – 2:45 | Break |
@@ -52,7 +52,7 @@ Please install **R** and **RStudio** before the bootcamp. Access to the Rutgers 
 
 | Time | Session |
 |------|---------|
-| 8:00 – 9:45 | Pathway enrichment analysis, gene network analysis |
+| 8:00 – 9:45 | Lasso, ridge regression, and Elastic Net; Regularization and variable selection |
 | 9:45 – 10:15 | Break |
 | 10:15 – 12:00 | Validation and cross-validation in machine learning; Supervised kernel machine learning; Support Vector Machines |
 | 12:00 – 1:00 | Lunch (provided) |

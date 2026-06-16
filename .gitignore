@@ -34,3 +34,8 @@
 # *.gz
 # *.gtf
 # *.rds
+
+# LaTeX render artifacts
+*.log
+*.aux
+*.out
