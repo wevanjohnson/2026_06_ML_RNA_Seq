@@ -12,7 +12,7 @@ header-includes:
   - \usepackage{xcolor}
   - \setbeamercolor{frametitle}{fg=black}
   - \usepackage{graphicx}
-  - \usebackgroundtemplate{\includegraphics[width=\paperwidth]{rFigs/RH_template_Page_2.png}}
+  - \usebackgroundtemplate{\includegraphics[width=\paperwidth]{../figs/RH_template_Page_2.png}}
   - \addtobeamertemplate{frametitle}{\vspace*{.25in}}{\vspace*{.25in}}
   - \setbeamerfont{frametitle}{size=\huge}
   - \usepackage{tikz}
