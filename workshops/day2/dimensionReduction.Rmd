@@ -277,6 +277,14 @@ counts <- read.table("features_combined.txt",
   sep="\t", header=T, row.names=1)
 meta_data <- read.table("hivtb_SRR_metadata.txt",
   sep="\t", header=T, row.names=1)
+
+## The count columns are named by SampleID, so use that as the row identifier
+rownames(meta_data) <- meta_data$SampleID
+
+## Reorder rows of meta data to match columns of count data
+meta_data <- meta_data[match(colnames(counts),rownames(meta_data)),]
+
+
 ```
 
 Using this dataset, please do the following: 
@@ -301,7 +309,7 @@ assays(se_hivtb)
 pca_out <- prcomp(t(assay(se_hivtb,"log_counts_cpm")))
   
 pca_plot <- as.data.frame(pca_out$x)
-pca_plot$Disease <- as.factor(se_hivtb$Disease)
+pca_plot$Disease <- as.factor(se_hivtb$disease_status)
 
 g <- pca_plot %>% ggplot(aes(x=PC1, y=PC5, color=Disease)) +
   geom_point(size=1.5) + xlab("PCA1") + ylab("PCA5") +
@@ -318,7 +326,7 @@ set.seed(1)
 umap_out <- umap(t(assay(se_hivtb,"log_counts_cpm")))
 
 umap_plot <- as.data.frame(umap_out$layout)
-umap_plot$Disease <- as.factor(se_hivtb$Disease)
+umap_plot$Disease <- as.factor(se_hivtb$disease_status)
 
 g <- umap_plot %>% ggplot(aes(x=V1, y=V2, color=Disease)) +
   geom_point(size=1.5) + xlab("UMAP1") + ylab("UMAP2") +
