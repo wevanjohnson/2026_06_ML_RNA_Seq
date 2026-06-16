@@ -80,7 +80,7 @@ Please install **R** and **RStudio** before the bootcamp. Access to the Rutgers 
 | 9:00 – 10:15 | Methods for batch correction and multi-study machine learning |
 | 10:15 – 10:30 | Break |
 | 10:30 – 12:00 | Introduction to multi-layer feedforward Neural Networks and beyond |
-| 12:00 – 2:00 | Lunch (provided) and networking |
+| 12:00 – 1:00 | Lunch (provided) and networking |
 | 1:00 – 2:30 | Hands-on experience: Biomarker development in RNA-seq |
 | 2:30 – 2:45 | Break |
 | 2:45 – 4:15 | More hands-on experience: Biomarker development in RNA-seq |
