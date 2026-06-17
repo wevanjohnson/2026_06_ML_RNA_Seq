@@ -1,0 +1,331 @@
+---
+title: "Machine Learning Tutorial Using `caret`"
+subtitle: Applied to the TB NanoString data
+author: "W. Evan Johnson"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    code_folding: show
+    toc: true
+    toc_float: true
+    theme: "flatly"
+editor_options:
+  chunk_output_type: console
+---
+
+```{r setup, message=FALSE, warning=FALSE}
+#install.packages(c("tidyverse", "caret", "DT", "randomForest", "nnet", "e1071", "gbm", "pROC"))
+
+
+suppressMessages({
+  library(tidyverse)
+  library(caret)
+  library(DT)
+  library(randomForest)
+  library(nnet)
+  library(e1071)
+  library(gbm)
+  library(pROC)
+})
+set.seed(0)
+```
+
+# Overview
+This notebook demonstrates using `caret::train()` to build classifiers for the TB Nanostring dataset.
+We'll load data, split train/test, fit multiple algorithms, compare accuracies, and plot results.
+
+## 0. Introduction: TB NanoString Dataset
+This dataset is derived from a published study in Clinical Infectious Diseases (Kaipilyawar et al., 2022) that aimed to distinguish active **tuberculosis (TB)** from **latent TB infection (LTBI)** using gene expression measured in peripheral blood. The authors selected a panel of 107 TB-relevant genes and profiled their expression levels in blood samples from individuals with active disease and those with latent infection.
+
+Key features of the dataset:
+
+* Rows correspond to individual patients.
+* First column is the TB status (active TB vs. LTBI), typically coded as a binary factor.
+* Remaining columns are expression levels (e.g. normalized counts or log-transformed intensities) for 107 TB-associated genes (NanoString panel).
+* The goal is to use these gene expression features as predictors in classification models that can distinguish active TB vs LTBI.
+
+This makes the dataset a classic high-dimensional, moderate sample size scenario: many predictors relative to samples. It’s well suited for demonstrating feature selection, penalized models, and cross-validated machine learning methods.
+
+In our analyses, we treat the **TB status** as the response (binary classification) and the 107 gene expression features as predictors. A key challenge is to avoid **overfitting**, especially given the high dimensionality, which is why cross validation, regularization, and careful model comparison are essential.
+
+### Load data
+```{r}
+TBnanostring <- readRDS("TBnanostring.rds")
+TBnanostring[[1]] <- as.factor(TBnanostring[[1]])
+colnames(TBnanostring)[1] <- "TB_Status"
+datatable(TBnanostring, options = list(pageLength = 10))
+```
+
+## 1. The `caret` Package
+
+The `caret` (Classification And REgression Training) package provides a unified interface to train, tune, and evaluate machine learning models in R. Instead of learning different syntax for each algorithm (e.g., `glm`, `knn`, `randomForest`, `nnet`), caret offers a consistent workflow through a single function: `train()`.
+
+Caret supports over **230 different algorithms**, each wrapped in a standardized format. A full list is available in the [caret model documentation](https://topepo.github.io/caret/available-models.html).
+
+Key advantages of caret:
+
+- **Unified syntax:** The same code structure works across models.  
+- **Built-in cross-validation:** Automatically handles resampling and tuning parameters.  
+- **Performance metrics:** Supports accuracy, ROC/AUC, and other summaries.  
+- **Variable importance and visualization:** Provides generic tools (`varImp`, `ggplot`) for comparing models.  
+
+For example, both a logistic regression and a random forest can be trained using nearly identical code:
+
+```r
+train_glm <- train(TB_Status ~ ., method = "glm", data = train_data, trControl = ctrl_cv)
+train_rf  <- train(TB_Status ~ ., method = "rf",  data = train_data, trControl = ctrl_cv)
+```
+
+Predictions and performance evaluation are then handled in the same way:
+
+```r
+pred_glm <- predict(train_glm, test_data)
+pred_rf  <- predict(train_rf, test_data)
+confusionMatrix(pred_glm, test_data$TB_Status)
+confusionMatrix(pred_rf, test_data$TB_Status)
+```
+
+This consistency makes caret ideal for **teaching**, **model comparison**, and **applied research**.  
+In this notebook, we’ll use `caret::train()` to build and evaluate multiple classifiers on the TB NanoString dataset.
+
+
+## 2. Partition: 70/30 (train/test)
+```{r}
+set.seed(0)
+y <- TBnanostring$TB_Status
+train_index <- createDataPartition(y, p = 0.7, list = FALSE)
+train_data <- TBnanostring[train_index, ]
+test_data  <- TBnanostring[-train_index, ]
+dim(train_data); dim(test_data)
+table(train_data$TB_Status)
+table(test_data$TB_Status)
+```
+
+## 3. Understanding ROC Curves and AUC
+Before training models, we’ll introduce ROC curves and AUC.
+
+### What is an ROC curve?
+- ROC = Receiver Operating Characteristic.
+- Plots True Positive Rate vs. False Positive Rate across thresholds.
+- Closer to top-left corner = better model.
+
+### What is AUC?
+- AUC = Area Under the Curve.
+- Measures discrimination between classes (0.5 = random, 1.0 = perfect).
+- Unaffected by class imbalance.
+
+### Example ROC curve
+```{r}
+library(pROC)
+set.seed(123)
+true_labels <- factor(sample(c("TB", "LTBI"), 100, replace = TRUE))
+predicted_prob <- runif(100)
+roc_obj <- roc(true_labels, predicted_prob, levels = c("LTBI", "TB"))
+auc_val <- auc(roc_obj)
+plot(roc_obj, col = "#2C7BB6", lwd = 2, main = paste("ROC Curve (AUC =", round(auc_val, 3), ")"))
+abline(a = 0, b = 1, lty = 2, col = "gray")
+```
+
+## 4. TrainControl objects
+The `trainControl()` function in caret defines how model training and performance evaluation are performed — i.e., the resampling strategy, performance metrics, and prediction saving options. It doesn’t fit the model itself — it just tells `train()` how to do it.
+
+```{r}
+ctrl_cv <- trainControl(method = "repeatedcv", number = 5, repeats = 3,
+                        classProbs = TRUE, summaryFunction = twoClassSummary,
+                        savePredictions = "final", verboseIter = FALSE)
+
+ctrl_none <- trainControl(method = "none", classProbs = TRUE, summaryFunction = twoClassSummary)
+
+set.seed(123)
+rf_model <- train(TB_Status ~ ., data = train_data, 
+                   method = "rf",  
+                   metric = "ROC", trControl = ctrl_cv)
+
+summary(rf_model)
+rf_pred <- predict(rf_model, test_data)
+confusionMatrix(rf_pred, test_data$TB_Status)
+
+# ROC and AUC
+rf_probs <- predict(rf_model, test_data, type = "prob")[, "TB"]
+rf_roc <- roc(test_data$TB_Status, rf_probs, levels = rev(levels(test_data$TB_Status)))
+plot(rf_roc, main = paste("RF ROC Curve (AUC =", round(auc(rf_roc), 3), ")"))
+auc(rf_roc)
+```
+
+Interpretation: The ROC curve shows how well the logistic regression model distinguishes TB from LTBI. A higher AUC indicates better separation.
+
+## 6. k-Nearest Neighbors (KNN)
+
+The KNN algorithm classifies a sample based on the majority label among its k nearest neighbors in the feature space. It’s simple and effective for low-dimensional, well-scaled data.
+
+```{r}
+set.seed(123)
+knn_model <- train(TB_Status ~ ., data = train_data, 
+                   method = "knn",
+                   metric = "ROC", tuneLength = 2, 
+                   trControl = ctrl_cv, preProcess = c("center", "scale"))
+
+knn_model
+plot(knn_model)
+
+# Predictions and performance
+knn_pred <- predict(knn_model, test_data)
+confusionMatrix(knn_pred, test_data$TB_Status)
+
+# ROC and AUC
+knn_probs <- predict(knn_model, test_data, type = "prob")[, "TB"]
+knn_roc <- roc(test_data$TB_Status, knn_probs, levels = rev(levels(test_data$TB_Status)))
+plot(knn_roc, main = paste("KNN ROC Curve (AUC =", round(auc(knn_roc), 3), ")"))
+auc(knn_roc)
+```
+
+Interpretation: KNN performance depends heavily on the scaling of variables and the choice of k, which is tuned automatically using cross-validation.
+
+## 7. Random Forest 
+Random forests are ensembles of decision trees that aggregate many weak learners to produce a strong classifier. They handle high-dimensional data and rank variable importance effectively.
+
+```{r}
+set.seed(123)
+rf_model <- train(TB_Status ~ ., data = train_data,
+                  method = "rf", metric = "ROC",
+                  importance = TRUE, trControl = ctrl_cv)
+
+rf_model
+rf_pred <- predict(rf_model, test_data)
+confusionMatrix(rf_pred, test_data$TB_Status)
+
+# Variable Importance
+rf_imp <- varImp(rf_model, scale = TRUE)
+plot(rf_imp, top = 10, main = "Top 10 Important Genes (Random Forest)")
+
+# ROC and AUC
+rf_probs <- predict(rf_model, test_data, type = "prob")[, "TB"]
+rf_roc <- roc(test_data$TB_Status, rf_probs, levels = rev(levels(test_data$TB_Status)))
+plot(rf_roc, main = paste("Random Forest ROC Curve (AUC =", round(auc(rf_roc), 3), ")"))
+auc(rf_roc)
+```
+
+Interpretation:
+The variable importance plot highlights the most discriminative genes, while the ROC curve summarizes model performance.
+
+
+## 8. Support Vector Machine (SVM)
+SVMs find the optimal hyperplane that best separates the two classes in a high-dimensional space. They can model complex boundaries via kernel functions.
+
+```{r}
+set.seed(123)
+svm_model <- train(TB_Status ~ ., data = train_data,
+  method = "svmRadial", metric = "ROC",
+  preProcess = c("center", "scale"), 
+  trControl = ctrl_cv, tuneLength = 10)
+
+svm_model
+plot(svm_model)
+
+# Predictions and performance
+svm_pred <- predict(svm_model, test_data)
+confusionMatrix(svm_pred, test_data$TB_Status)
+
+# ROC and AUC
+svm_probs <- predict(svm_model, test_data, type = "prob")[, "TB"]
+svm_roc <- roc(test_data$TB_Status, svm_probs, levels = rev(levels(test_data$TB_Status)))
+plot(svm_roc, main = paste("SVM ROC Curve (AUC =", round(auc(svm_roc), 3), ")"))
+auc(svm_roc)
+```
+
+Interpretation:
+SVM performance depends on the kernel and the cost parameter, both tuned automatically via cross-validation.
+
+## 9. Neural Network (nnet)
+Neural networks approximate nonlinear relationships through layers of interconnected nodes (“neurons”). Here we use a simple feed-forward architecture from the `nnet` package via caret.
+
+```{r}
+set.seed(123)
+suppressWarnings(
+  nnet_model <- train(TB_Status ~ ., data = train_data,
+  method = "nnet", metric = "ROC",
+  preProcess = c("center", "scale"), trControl = ctrl_cv,
+  tuneLength = 10, trace = FALSE)
+)
+
+nnet_model
+plot(nnet_model)
+
+# Predictions and performance
+nnet_pred <- predict(nnet_model, test_data)
+confusionMatrix(nnet_pred, test_data$TB_Status)
+
+# ROC and AUC
+nnet_probs <- predict(nnet_model, test_data, type = "prob")[, "TB"]
+nnet_roc <- roc(test_data$TB_Status, nnet_probs, levels = rev(levels(test_data$TB_Status)))
+plot(nnet_roc, main = paste("Neural Net ROC Curve (AUC =", round(auc(nnet_roc), 3), ")"))
+auc(nnet_roc)
+```
+
+Interpretation:
+Neural networks can capture nonlinear relationships but require careful tuning and regularization to avoid overfitting.
+
+
+## 10. Gradient Boosting Machine (GBM)
+GBMs build an ensemble of shallow trees sequentially, where each tree corrects errors from the previous ones. They often achieve excellent predictive accuracy on structured data.
+
+```{r}
+set.seed(123)
+gbm_model <- train(TB_Status ~ ., data = train_data,
+  method = "gbm", metric = "ROC",
+  trControl = ctrl_cv, verbose = FALSE,
+  tuneLength = 10)
+
+gbm_model
+plot(gbm_model)
+
+# Predictions and performance
+gbm_pred <- predict(gbm_model, test_data)
+confusionMatrix(gbm_pred, test_data$TB_Status)
+
+# Variable Importance
+gbm_imp <- varImp(gbm_model, scale = TRUE)
+plot(gbm_imp, top = 20, main = "Top 10 Important Genes (GBM)")
+
+# ROC and AUC
+gbm_probs <- predict(gbm_model, test_data, type = "prob")[, "TB"]
+gbm_roc <- roc(test_data$TB_Status, gbm_probs, levels = rev(levels(test_data$TB_Status)))
+plot(gbm_roc, main = paste("GBM ROC Curve (AUC =", round(auc(gbm_roc), 3), ")"))
+auc(gbm_roc)
+```
+
+Interpretation:
+GBMs often outperform other models due to their ability to model complex interactions, though they require careful tuning of learning rate and tree depth.
+
+## 11. Ensemble Learning 
+A common way to boost model performance is to combine several different models into one – a technique known as ensemble learning. The idea is that by pooling the strengths of multiple models, we can create a sort of “super model” that performs better than any single one on its own. Let’s now take the models we created earlier, integrate them into an ensemble framework, and evaluate the results.
+
+```{r}
+library(caretEnsemble)
+set.seed(123)
+methods_list <- c("knn", "svmRadial", "gbm")
+# Use caretList() much like we use train(), except this time we pass in multiple algorithms to run at once.
+suppressMessages(
+  suppressWarnings(
+    models <- caretList(TB_Status ~ . , data = train_data,
+                    trControl = ctrl_cv, metric = "ROC",
+                    tuneLength = 10, methodList = methods_list)
+  ))
+# Try a ensemble using 'random forest' of our individual models
+ens <- caretStack(models, metric = "ROC", method = "rf", 
+                  trControl = ctrl_cv)
+
+# ROC and AUC
+ens_probs <- unlist(predict(ens, test_data)[,"TB"])
+ens_roc <- roc(test_data$TB_Status, ens_probs, levels = rev(levels(test_data$TB_Status)))
+plot(ens_roc, main = paste("Ensemble ROC Curve (AUC =",
+                           round(auc(ens_roc), 3), ")"))
+auc(ens_roc)
+```
+
+
+## 12. Session info
+```{r}
+sessionInfo()
+```
+
