@@ -1,0 +1,322 @@
+---
+title: "Boosting, Optimization, and Explainability"
+author: | 
+  | W. Evan Johnson, Ph.D.
+  | Professor, Division of Infectious Disease
+  | Director, Center for Data Science
+  | Associate Director, Center for Biomedical Informatics and Health AI
+  | Rutgers University -- New Jersey Medical School
+date: "`r Sys.Date()`"
+header-includes:
+  - \usepackage{amsmath}
+  - \usepackage{xcolor}
+  - \setbeamercolor{frametitle}{fg=black}
+  - \usepackage{graphicx}
+  - \usebackgroundtemplate{\includegraphics[width=\paperwidth]{../figs/RH_template_Page_2.png}}
+  - \addtobeamertemplate{frametitle}{\vspace*{.25in}}{\vspace*{.25in}}
+  - \setbeamerfont{frametitle}{size=\huge}
+  - \usepackage{tikz}
+output: 
+  beamer_presentation
+classoption: aspectratio=169 
+editor_options: 
+  chunk_output_type: console
+tables: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, fig.align="center")
+library(caret)
+library(tidyverse)
+library(xgboost)
+img_path <- "treeFigs/"
+```
+
+
+
+##  Ensemble Methods: Bagging vs. Boosting
+
+\Large
+**Ensemble methods** combine the predictions of multiple individual models (often called **weak learners**, like decision trees) to create a single, highly accurate predictor.
+
+The two main strategies for building ensembles are:
+
+\normalsize
+\begin{itemize}
+    \item \textbf{Bagging (Bootstrap Aggregation)}: A {\it parallel} method where models are built independently and then averaged/combined. Used in \textbf{Random Forests}.
+    \item \textbf{Boosting}: A {\it sequential} method where models are built iteratively, with each new model focusing on correcting the errors of the previous ones. Used in \textbf{XGBoost} (introduced soon).
+\end{itemize}
+
+---
+
+## Ensemble Methods: Bagging vs. Boosting
+\center
+![](treeFigs/trees.png){width="80%"}
+
+## Bagging (Bootstrap Aggregation)
+
+\Large
+Bagging is a technique designed primarily to **reduce variance** in high-variance models, such as deep decision trees.
+
+\small
+\begin{enumerate}
+    \item \textbf{Parallelism}: $B$ independent models are trained simultaneously.
+    \item \textbf{Bootstrap Sampling}: Each model is trained on a unique {\it bootstrap sample} (sampling with replacement) of the original training data. This ensures the individual trees are diverse (random).
+    \item \textbf{Final Prediction}: The predictions from all $B$ models are combined by:
+    \begin{itemize}
+        \item \textbf{Averaging} (for regression, e.g., Random Forest).
+        \item \textbf{Majority Vote} (for classification, e.g., Random Forest).
+    \end{itemize}
+\end{enumerate}
+
+\normalsize
+The final averaged model has a significantly lower variance than any single tree, but the bias remains roughly the same.
+
+---
+
+## Boosting (Sequential Error Correction)
+
+\Large
+Boosting is an iterative technique designed primarily to *reduce bias* and create a single strong learner from a sequence of weak learners.
+
+\small
+\begin{enumerate}
+    \item \textbf{Sequential Dependence}: Models are trained {\it one after the other}.
+    \item \textbf{Error Focus}: Each subsequent model is trained to predict the {\it residuals} (the errors) of the combined ensemble created up to that point.
+    \item \textbf{Weighted Combination}: New models are added to the ensemble using a small {\it learning rate ($\eta$)} to ensure the model learns slowly and prevents dramatic overfitting.
+\end{enumerate}
+
+\normalsize
+Boosting can achieve very high predictive accuracy but requires careful tuning to avoid overfitting the training data, as seen with the complexity parameters in XGBoost.
+
+---
+
+## Introducing Gradient Boosting Machines (GBMs)
+\Large Gradient Boosting Machines (GBMs) is the general class of ensemble methods that utilizes the boosting principle.
+
+\small \textbf{How it relates to Boosting and XGBoost:} 
+
+\begin{itemize} 
+  \item Boosting Foundation: GBMs use the sequential error correction strategy (Boosting), where new trees correct the mistakes of the previous ensemble. 
+  \item Gradient Descent: The "Gradient" in GBM refers to the use of gradient descent—an optimization algorithm—to precisely identify the errors (residuals) and determine the ideal direction for the next tree to move in to minimize the model's overall loss function. 
+  \item XGBoost is an Implementation: XGBoost is simply a modern, highly optimized, and regularized (L1/L2) implementation of the GBM algorithm. \end{itemize}
+
+
+\normalsize GBMs are generally more complex to train than Random Forests but often achieve superior predictive accuracy by aggressively reducing model bias.
+
+
+## Introducing Gradient Boosting Machines (GBMs)
+\center
+![](treeFigs/llustration-of-a-Gradient-Boosting-Machine.png){width=50%}
+
+## Gradient Boosting Machines (GBMs)
+\Large
+The core idea is **sequential error correction**:
+
+\normalsize
+1.  **Tree 1 (Weak Learner):** Makes an initial prediction.
+2.  **Tree 2:** Is trained to predict and correct the **residual errors** (or gradients of the loss function) from the combined output of all previous trees.
+3.  This process continues, with each new tree $f_k(\mathbf{x})$ added to the ensemble to minimize the total error. $$\hat{y} = \hat{y}_0 + \sum_{k=1}^K \eta \cdot f_k(\mathbf{x})$$ The final prediction is the sum of the initial prediction ($\hat{y}_0$) and all subsequent tree predictions, scaled by the **learning rate** ($\eta$).
+
+
+## GBM Example: Iris
+
+```{r}
+# Load the iris dataset and set up training control
+data("iris")
+set.seed(42) # Set seed for reproducibility
+
+# 5-fold Cross-Validation
+ctrl <- trainControl(method = "cv", number = 5)
+
+# GBM Tuning Grid
+gbmGrid <- expand.grid(n.trees = c(50, 100, 150),
+                       interaction.depth = c(1, 3, 5),
+                       shrinkage = c(0.1),
+                       n.minobsinnode = 10)
+```
+
+## GBM Example: Iris
+```{r}
+# Train the GBM model
+gbm_fit <- train(Species ~ ., data = iris,
+  method = "gbm", trControl = ctrl,
+  verbose = FALSE, tuneGrid = gbmGrid)
+
+# Print best model results
+print(gbm_fit)
+```
+
+## GBM Example: Iris
+```{r,fig.height=5,fig.width=7, out.width="50%"}
+plot(gbm_fit)
+```
+
+## GBM Example: Iris
+\footnotesize
+```{r}
+gbm_predictions <- predict(gbm_fit, newdata = iris)
+confusionMatrix(gbm_predictions, iris$Species)
+```
+
+
+
+## Extreme Gradient Boosting (XGBoost)
+
+\Large
+**XGBoost** (Extreme Gradient Boosting) is a highly optimized and scalable implementation of **Gradient Boosting Machines (GBMs)**. It builds upon the idea of decision trees and boosting.
+
+
+## XGBoost: Key Enhancements
+
+\Large
+XGBoost improves upon traditional GBMs with several critical enhancements for performance and generalization:
+
+* **Regularization:** Includes both $\mathbf{L1}$ (Lasso) and $\mathbf{L2}$ (Ridge) terms in the objective function to explicitly **penalize complexity** and prevent overfitting, which is common in boosting.
+* **Parallel Computing:** Optimized to run tree construction in parallel, offering significant **speed gains** compared to older GBM implementations.
+
+## XGBoost: Key Enhancements (continued)
+
+\Large
+* **Handling Missing Values:** It has a built-in method to intelligently handle missing data by allowing the algorithm to **learn the best path** (left or right split) for null values.
+* **Learning Rate ($\eta$):** A small $\eta$ (e.g., $0.01$ to $0.3$) is used to **shrink** the contribution of each tree, making the learning process slow and more robust, requiring more trees (`nrounds`).
+
+\Large XGBoost often yields superior accuracy compared to Random Forests, but remains relatively interpretable through Feature Importance plots.
+
+## XGBoost: Iris Example
+
+```{r}
+data("iris")
+set.seed(42)  # reproducibility
+
+## xgboost needs a numeric feature matrix and 0-based integer labels
+X <- as.matrix(iris[, 1:4])
+y <- as.integer(iris$Species) - 1   # setosa=0, versicolor=1, virginica=2
+dtrain <- xgb.DMatrix(data = X, label = y)
+
+## Booster parameters
+params <- list(
+  objective = "multi:softprob", # multiclass probabilities
+  num_class = 3,                # number of classes
+  eta = 0.1,                    # learning rate (shrinkage)
+  max_depth = 3,                # tree depth
+  subsample = 1,                # row subsample
+  colsample_bytree = 1          # feature subsample
+)
+```
+
+## XGBoost: Iris Example
+```{r, warning=FALSE}
+xgb_fit <- xgb.train(
+  params = params,
+  data = dtrain,
+  nrounds = 100,    # number of boosting iterations
+  verbose = 0
+)
+```
+
+## XGBoost: Feature Importance
+```{r,fig.height=5,fig.width=7, out.width="50%"}
+importance <- xgb.importance(model = xgb_fit)
+xgb.plot.importance(importance)
+```
+
+## XGBoost: Iris Example
+\footnotesize
+```{r, warning=FALSE}
+## multi:softprob returns one probability column per class
+xgb_probs <- predict(xgb_fit, X)
+xgb_predictions <- factor(levels(iris$Species)[max.col(xgb_probs)],
+                          levels = levels(iris$Species))
+confusionMatrix(xgb_predictions, iris$Species)
+```
+
+
+## LIME: Local Interpretable Model-agnostic Explanations
+
+\Large
+**LIME** focuses on explaining an **individual prediction** by building a simple, interpretable model *around* the prediction point.
+
+**Intuition: Trusting a local neighborhood.**
+
+1. **Select a prediction**: Choose one data point $\mathbf{x}$ to explain.
+2. **Generate neighbors**: Perturb the data point $\mathbf{x}$ to create many new, slightly modified "neighbor" points.
+
+## LIME: Local Interpretable Model-agnostic Explanations
+
+\Large
+3. **Weight neighbors**: Weight these neighbors based on their proximity to $\mathbf{x}$.
+4. **Train a simple model**: Train a simple, interpretable model (like a linear regression or a shallow decision tree) on these weighted, perturbed data points.
+5.  **Explain** The parameters of the simple model locally approximate the behavior of the complex model and provide the feature contribution for that single prediction.
+
+## LIME: Local Interpretable Model-agnostic Explanations
+\Large
+**Key Feature**: LIME explanations are **local**—they only explain *why* a specific data point $\mathbf{x}$ received its prediction. 
+
+
+## LIME Example: GBM on Iris Data
+\Large
+```{r, message=F}
+# install.packages("lime")
+library(lime)
+iris_features <- iris[, -5]
+
+# Create a LIME explainer for the GBM model
+gbm_explainer <- lime(
+  x = iris_features,
+  model = gbm_fit
+)
+```
+
+## LIME Example: GBM on Iris Data
+\Large
+```{r}
+# first 2 iris samples
+samples_to_explain <- iris_features[c(1,51,101), ] 
+
+gbm_lime_results <- explain(
+  x = samples_to_explain,
+  explainer = gbm_explainer,
+  n_features = 4,
+  n_labels = 1
+)
+```
+
+## LIME Example: GBM on Iris Data
+```{r,fig.height=4,fig.width=8, out.width="75%"}
+plot_features(gbm_lime_results)
+```
+
+## SHAP: SHapley Additive exPlanations
+
+\Large
+**SHAP** connects optimal feature attribution with game theory, providing a single, consistent framework to measure the contribution of each feature.
+
+SHAP values are based on **Shapley values** from cooperative game theory.
+
+## SHAP: SHapley Additive exPlanations
+\Large
+\begin{itemize}
+    \item The features of a model are considered the "players" in a "coalition."
+    \item The prediction is the "payout."
+    \item The SHAP value for a feature is its average marginal contribution across all possible feature combinations (coalitions).
+\end{itemize}
+
+## SHAP: SHapley Additive exPlanations
+\Large
+**Key Properties:**
+
+* **Consistency**: A feature that contributes more (or the same) to the prediction should always be assigned a higher (or equal) SHAP value.
+* **Model-Agnostic**: Can be used for any model, although faster implementations exist for tree ensembles (Tree SHAP).
+* **Global and Local**: SHAP can explain a single prediction (**Local**) and can be aggregated to visualize overall feature importance and relationships (**Global**).
+
+## SHAP: SHapley Additive exPlanations
+\Large
+**Interpretation**: A SHAP value represents the feature's contribution to the prediction, pushing it either higher or lower than the average prediction. 
+
+
+## Session Info
+\tiny
+```{r session}
+sessionInfo()
+```
