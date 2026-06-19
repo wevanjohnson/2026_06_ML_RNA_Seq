@@ -116,9 +116,9 @@ text(train_rpart$finalModel, cex = 0.75)
 
 ## Decision Trees
 \Large
-A tree is a flow chart of yes or no questions. We define an algorithm that creates trees with predictions at the ends, referred to as __nodes__.
 
-Regression and decision trees, or sometimes called **Classification and Regression Trees (CART)**, predict an outcome $Y$ by partitioning the predictors ${\bf X}$.
+- A tree is a **flow chart of yes/no questions**, with predictions at the ends (**nodes**)
+- **CART** (Classification and Regression Trees) predicts an outcome $Y$ by **partitioning the predictors** ${\bf X}$
 
 ## Regression trees
 
@@ -132,15 +132,16 @@ polls_2008 %>% ggplot() + geom_point(aes(day, margin))
 
 ## Regression trees
 \Large
-The idea is to build a decision tree and, at the end of each __node__, obtain a predictor $\hat{y}$. 
-
-Mathematically, we are partitioning the predictor space into $J$ non-overlapping regions, $R_1, R_2, \ldots, R_J$, and then for any predictor $x$ that falls within region $R_j$, estimate $f(x)$ with the average of the training observations $y_i$ for which the associated predictor $x_i$ is also in $R_j$.
+- Build a tree; each **node** yields a prediction $\hat{y}$
+- Partition the predictor space into $J$ non-overlapping regions $R_1, R_2, \ldots, R_J$
+- For any $x \in R_j$, estimate $f(x)$ by the **average of the training $y_i$** in $R_j$
 
 ## Regression trees
 \Large
-Regression trees create partitions recursively. We start the algorithm with one partition, the entire predictor space. In our simple first example, this space is the interval [-155, 1]. 
+Partitions are created **recursively**:
 
-The first step will partition the space into two partitions. The second step will split one of these partitions into two and we will have three partitions, then four, then five, and so on.
+- Start with one partition --- the whole predictor space (here, the interval $[-155, 1]$)
+- Each step splits one partition in two: 2 partitions, then 3, 4, 5, $\ldots$
 
 ## Regression trees
 \Large
@@ -171,17 +172,16 @@ polls_2008 %>%
 
 ## Regression trees
 \Large
-Note that the algorithm stopped partitioning at 8. Every time we split and define two new partitions, our training set RSS decreases because our model has more flexibility to adapt to the training data. 
-
-In fact, if you split until every point is its own partition, then RSS goes all the way down to 0. 
-
-To avoid this, the algorithm sets a minimum for how much the RSS must improve for another partition to be added. This parameter is referred to as the __complexity parameter (cp)__.
+- Each split **lowers training RSS** (more flexibility to fit the data)
+- Split until every point is its own partition $\rightarrow$ RSS $= 0$ (**overfitting**)
+- To prevent this: require a **minimum RSS improvement** per split --- the **complexity parameter (cp)**
 
 ## Regression trees
 \Large
-However, cp is not the only parameter --- another common parameter is the minimum number of observations required in order to split a partition. The argument used in the `rpart` function is `minsplit` and the default is 20. 
+Other `rpart` stopping parameters:
 
-The `rpart` implementation of regression trees also permits users to determine a minimum number of observations in each node. The argument is `minbucket` and defaults to `round(minsplit/3)`. 
+- **`minsplit`** --- min observations needed to split a node (default 20)
+- **`minbucket`** --- min observations in each leaf (default `round(minsplit/3)`)
 
 ## Regression trees
 If we set `cp = 0` and `minsplit = 2`, then our prediction is as flexible as possible and our predictor is our original data:
@@ -237,19 +237,19 @@ polls_2008 %>%
 
 ## Classification (decision) trees
 \Large
-**Classification trees**, or **decision trees**, are used in prediction problems where the _outcome is categorical_. 
+Used when the **outcome is categorical**. Two changes from regression trees:
 
-First, we form predictions by calculating which class is the most common among the training set observations within the partition, rather than taking the average in each partition (as we can't take the average of categories).
-
-Second, we metrics such as the the __Gini Index__ and __Entropy__ to optimize our results.   
+- **Predict** the *most common class* in each partition (not the average)
+- **Split** using metrics like the **Gini Index** or **Entropy**
 
 ## Classification (decision) trees
 \Large
-To define the **Gini Index**, we define $\hat{p}_{j,k}$ as the proportion of observations in partition $j$ that are of class $k$. The Gini Index is defined as 
+Let $\hat{p}_{j,k}$ be the proportion of class $k$ in partition $j$. The **Gini Index** is
 
 $$\mbox{Gini}(j) = \sum_{k=1}^K \hat{p}_{j,k}(1-\hat{p}_{j,k}).$$
 
-In a perfect scenario, the outcomes in each of our partitions are all of the same category since this will permit perfect accuracy. The _Gini Index_ would be 0, and becomes larger the more we deviate from this scenario. 
+- **$0$** when a partition is pure (one class) --- the ideal
+- Larger as the classes get more mixed
 
 ## Classification (decision) trees
 \Large
@@ -345,9 +345,11 @@ Random forests, explained next, improve on several of these shortcomings.
 
 ## Random forests
 \Large
-**Random forests** are a *very popular* and *very useful* machine learning approach that addresses the shortcomings of decision trees. The goal is to improve prediction performance and reduce instability by __averaging__ multiple decision trees. 
+**Random forests** fix the instability of single decision trees by **averaging many trees**:
 
-The first step is __bootstrap aggregation__ or __bagging__. We will generate many regression or classification trees, and then form a final prediction based on the average of all these trees. These two features combined explain the name: the bootstrap makes the individual trees **randomly** different, and the combination of trees is the **forest**. 
+- **Bagging** (bootstrap aggregation): build many regression/classification trees on bootstrap samples
+- Combine them --- **average** (regression) or **majority vote** (classification)
+- The bootstrap makes trees randomly different; the set of trees is the "**forest**"
 
 
 ## Random forests
@@ -506,7 +508,11 @@ grid.arrange(p2, p1, nrow=1)
 
 ## Random forests
 \Large
-Visualizing the estimate shows that, although we obtain high accuracy, it appears that there is room for improvement by making the estimate smoother. This could be achieved by changing the parameter that controls the minimum number of data points in the nodes of the tree. The larger this minimum, the smoother the final estimate will be. We can train the parameters of the random forest. 
+High accuracy, but the estimate can be made **smoother**:
+
+- Controlled by the **minimum node size** (data points per leaf)
+- Larger minimum $\rightarrow$ smoother estimate
+- This parameter can be **tuned**
 
 ## Random forests
 \Large
@@ -556,13 +562,10 @@ grid.arrange(p2, p1, nrow=1)
 
 
 ## Random forests
-Note that we can avoid writing our own code by using other random forest implementations as described in the [__caret manual__](http://topepo.github.io/caret/available-models.html).
-
-Random forest often performs well in many examples, however, a disadvantage of random forests is that we lose interpretability. 
-
-An approach that helps with interpretability is to examine __variable importance__. To define _variable importance_, we count how often a predictor is used in the individual trees. [You can learn more about it by clicking here](https://web.stanford.edu/~hastie/Papers/ESLII.pdf). 
-
-The `caret package` includes the function `varImp` that extracts variable importance from any model in which the calculation is implemented.
+- Other implementations exist (see the [__caret manual__](http://topepo.github.io/caret/available-models.html))
+- Random forests perform well, but **lose interpretability**
+- **Variable importance** helps: count how often each predictor is used across trees ([details here](https://web.stanford.edu/~hastie/Papers/ESLII.pdf))
+- `caret::varImp()` extracts it from any supported model
 
 
 ## Session Info
