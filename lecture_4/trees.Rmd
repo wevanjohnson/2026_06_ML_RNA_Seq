@@ -371,7 +371,7 @@ We use randomness in two ways to get different trees. Let $N$ be the number of o
 2\. **Randomly selecting predictor variables**, ${\bf x}$, to be included (or excluded) in the building of each tree. A different random subset is selected for each tree.
 
 ## Random forests
-We will demonstrate how this works by fitting a random forest to the 2008 polls data.  We will use the __randomForest__ package:
+We will demonstrate with the 2008 polls data, using the __randomForest__ package. (Polls has only one predictor, `day`, so this forest is essentially **bagging** --- the random selection of predictors matters more when there are many.)
 
 \small
 ```{r polls-2008-rf, message=FALSE, warning=FALSE}
@@ -388,7 +388,7 @@ plot(fit,main='')
 ```
 
 ## Random forests
-In this case, the accuracy improves as we add more trees until about 30 trees where accuracy stabilizes.The results for this random forest looks like this:
+In this case, the error decreases as we add more trees until about 30 trees, where it stabilizes. The results for this random forest look like this:
 \footnotesize
 ```{r polls-2008-rf-fit, , out.width='60%', fig.height=3, fig.width=6, fig.align='center'}
 polls_2008 %>% 
@@ -567,6 +567,50 @@ grid.arrange(p2, p1, nrow=1)
 - **Variable importance** helps: count how often each predictor is used across trees ([details here](https://web.stanford.edu/~hastie/Papers/ESLII.pdf))
 - `caret::varImp()` extracts it from any supported model
 
+
+## Trees \& forests in practice
+\Large
+**When are trees / random forests a good choice?**
+
+- **Non-linear** effects and **interactions** among predictors
+- **Mixed** predictor types (continuous + categorical), minimal preprocessing
+- **Many predictors** --- even more predictors than samples
+- No distributional assumptions required
+
+\vspace{0.2cm}
+A **single tree** is interpretable but **unstable**; a **random forest** is accurate and robust, but **less interpretable**.
+
+## Trees \& forests in practice
+\Large
+**Random forest knobs (and sane defaults):**
+
+- **`ntree`** --- enough trees that the error curve flattens (often 500--1000)
+- **`mtry`** --- predictors tried per split: $\approx \sqrt{p}$ (classification), $p/3$ (regression)
+- **node size** --- larger $\rightarrow$ smoother, less overfitting
+
+\vspace{0.2cm}
+Defaults are usually reasonable; tune `mtry` and node size by **cross-validation** when needed.
+
+## Trees \& forests in practice
+\Large
+**Out-of-bag (OOB) error --- validation for free**
+
+- Each tree trains on a bootstrap sample, leaving out $\approx 1/3$ of the cases
+- Predict those held-out cases using only the trees that never saw them
+- Average across the forest $\rightarrow$ an **honest error estimate** with no separate validation set
+
+\vspace{0.2cm}
+`randomForest()` reports this automatically (the "OOB estimate of error rate").
+
+## Trees \& forests in practice
+\large
+**Applying to omics / high-dimensional data ($p \gg n$):**
+
+- Random forests handle **thousands of predictors** (e.g., genes) with few samples
+- **Correlated predictors** (co-expressed genes) **split importance** among themselves
+- **Variable importance is biased** toward correlated predictors --- interpret with care
+- **Class imbalance** (e.g., rare disease) needs class weights or balanced sampling
+- **Never judge performance on training data** --- use cross-validation or a held-out test set
 
 ## Acknowledgments
 \large
