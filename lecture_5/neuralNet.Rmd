@@ -35,6 +35,45 @@ img_path <- "nnFigs/"
 ```
 
 
+##
+\vfill
+\begin{center}
+{\huge\itshape ``With great power comes great responsibility.''}
+
+\vspace{0.8cm}
+
+{\large --- Uncle Ben, \emph{Spider-Man}}
+\end{center}
+\vfill
+
+## A Quick Map of "AI"
+\Large
+Where do neural networks fit in the broader AI landscape?
+
+- **Narrow AI** (all AI today): does one specific task well --- Face ID, spam filters, recommendations, Google Maps, ChatGPT
+- **Generative AI**: creates new content from learned patterns --- text, images, music, video, voice
+- **Agentic AI** (emerging): takes actions, makes plans, and uses tools to accomplish goals --- schedules meetings, sends email, runs tasks automatically
+
+## A Quick Map of "AI"
+\Large
+
+- **Artificial General Intelligence (AGI)**: human-level reasoning across many tasks --- **theoretical; does not exist** (movies exaggerate it)
+- **Artificial Super Intelligence (ASI)**: hypothetical intelligence that would *surpass* humans across virtually all domains --- **also does not exist**
+
+\vspace{0.3cm}
+Everything we build today --- including the neural networks in this lecture --- is **Narrow AI**.
+
+##
+\vfill
+\begin{center}
+{\huge\itshape ``AI is not magic; it's math.''}
+
+\vspace{0.8cm}
+
+{\large --- Peter Norvig}
+\end{center}
+\vfill
+
 ## Introduction to Neural Networks
 \Large
 The human brain consists of billions of neural cells that process information. Each neural cell considered a simple processing system. The interconnected web of neurons, also known as a __biological neural network__, transmits information through electrical signals from neuron to neuron. 
@@ -103,6 +142,36 @@ The **activation function** defines the output of a neuron in terms of a local i
 Modern **neural networks** are algorithms comprising multiple layers of connected input/output units (neurons) in which each connection has a weight associated with it. 
 \center
 ![](nnFigs/nn_layers.png){width=70%}
+
+## How Does a Neural Network Learn?
+\Large
+Training a network means finding the **weights** that make its predictions match the data. Three ingredients:
+
+1. A **loss** \( \ell(y, \hat{y}) \): how wrong is the prediction?
+2. **Backpropagation**: how does each weight affect the loss?
+3. **Gradient descent**: nudge each weight to reduce the loss.
+
+## The Chain Rule
+\center
+![](nnFigs/chain_rule.jpeg){width=70%}
+
+## The Chain Rule
+\Large
+A neural network is just **functions composed inside functions**. The derivative of a composition multiplies the derivatives of each layer:
+\center
+![](nnFigs/chain_links.png){width=95%}
+
+## Backpropagation
+\Large
+The chain rule lets us send the error **backward** through the network and compute the gradient of the loss with respect to **every weight**:
+\center
+![](nnFigs/backprop.png){width=80%}
+
+## Gradient Descent
+\Large
+Each step adjusts the weights in the direction that **decreases the loss**, iterating until it converges to a minimum:
+\center
+![](nnFigs/gradient_descent.png){width=50%}
 
 ## Multilayer Perceptron Neural Network in R
 Suppose we have students' technical knowledge (TKS), communication skill score (CSS), and placement status (Placed):
@@ -362,6 +431,22 @@ And as a classifier:
 - Transformers process the **entire sequence at once**
 - Introduced in **“Attention is All You Need”** (Vaswani et al., 2017)
 
+## Transformers: A Very Advanced Autocomplete
+\Large
+**GPT** = **G**enerative **P**retrained **T**ransformer. At its core, it just predicts the next word:
+
+- You type a prompt
+- The model looks at **all** the words at once
+- It assigns **probabilities** to possible next words
+- It picks a likely next word --- then repeats, again and again
+
+\vspace{0.2cm}
+ChatGPT is, in essence, a *very advanced autocomplete.*
+
+## Transformers: Encoder--Decoder
+\center
+![](nnFigs/gpt_autocomplete.png){width=80%}
+
 ## Key Idea: Attention
 \Large
 - Attention allows the model to **focus on relevant parts** of the input
@@ -406,6 +491,32 @@ And as a classifier:
 \center
 ![](nnFigs/transformers.png){height=70%}
 
+
+##
+\vfill
+\begin{center}
+{\huge\itshape ``AI will not replace us, it will amplify us.''}
+
+\vspace{0.8cm}
+
+{\large --- Pedro Domingos}
+\end{center}
+\vfill
+
+##
+\vfill
+\begin{center}
+{\huge\itshape ``Biology / Biomedicine is a Data Science.''}
+
+\vspace{0.6cm}
+
+{\large --- W. Evan Johnson}
+
+\vspace{0.4cm}
+
+{\large\itshape Addendum: don't avoid the math!}
+\end{center}
+\vfill
 
 ## Session Info
 \tiny
