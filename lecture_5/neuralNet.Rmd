@@ -102,9 +102,11 @@ The ability to think, choose, create, understand meaning, and act with moral res
 
 ## Introduction to Neural Networks
 \Large
-The human brain consists of billions of neural cells that process information. Each neural cell considered a simple processing system. The interconnected web of neurons, also known as a __biological neural network__, transmits information through electrical signals from neuron to neuron. 
+The brain has billions of neurons, each a simple processor, wired into a **biological neural network** that passes electrical signals from neuron to neuron:
 
-The dendrites of a neuron receive input signals from another neuron. The cell body, or soma, sums the inputs from multiple dendrites. Axons pass on information and output from the soma to the synapses, which are the _conjunction_ points for other neurons.
+- **Dendrites** --- receive input signals
+- **Soma** (cell body) --- sums the inputs
+- **Axon $\rightarrow$ synapses** --- pass the output on to other neurons
 
 ## Introduction to Neural Networks
 \center
@@ -112,53 +114,48 @@ The dendrites of a neuron receive input signals from another neuron. The cell bo
 
 ## Introduction to Neural Networks
 \Large
-In 1944, Warren McCulloch and Walter Pitts developed the first mathematical model of a neuron. 
+**McCulloch \& Pitts (1943--44)** --- the first mathematical model of a neuron:
 
-In their research paper "A logical calculus of the ideas immanent in nervous activity", they described the simple mathematical model for a neuron, which represents a single cell of the neural system that takes inputs, processes those inputs, and returns an output. This model is known as the McCulloch-Pitts neural model. 
+- Takes inputs, processes them, and returns an output (thresholds + weights)
+- **No layers and no training rule**
+- Showed a neural net could *in principle* compute any function a computer could --- framing the brain as a computing device
 
 ## Introduction to Neural Networks
-The McCulloch-Pitts neuron model looked something like this: 
+The McCulloch-Pitts neuron model looked something like this:
 \center
 ![](nnFigs/m-p_neuron.png){width=50%}
 
+## Introduction to Neural Networks
+\Large
+The **Perceptron** --- the first *trainable* neural network:
+
+- **1957 (Rosenblatt):** one layer of adjustable weights and thresholds, between input and output layers
+- **1959 (Minsky \& Papert):** showed common computations were *impractically slow* on perceptrons --- research stalls
 
 ## Introduction to Neural Networks
 \Large
-The neural nets described by McCullough and Pitts in 1944 had thresholds and weights, but they weren’t arranged into layers, and the researchers didn’t specify any training mechanism. 
-
-What McCullough and Pitts showed was that a neural net could, in principle, compute any function that a digital computer could. The result was more neuroscience than computer science: The point was to suggest that the human brain could be thought of as a computing device.
-
-
-## Introduction to Neural Networks
-\Large
-The first trainable neural network, the **Perceptron**, was demonstrated by the Cornell University psychologist Frank Rosenblatt in 1957. The Perceptron’s design was much like that of the modern neural net, except that it had only one layer with adjustable weights and thresholds, sandwiched between input and output layers.
-
-## Introduction to Neural Networks
-\Large
-Perceptrons were an active area of research in both psychology and the fledgling discipline of computer science until 1959, when Minsky and Papert published a book titled "Perceptrons," which demonstrated that executing certain fairly common computations on Perceptrons would be _impractically time consuming_.
-
-## Introduction to Neural Networks
-\Large
-The Perceptron model looked something like this: 
+The Perceptron model looked something like this:
 \center
 ![](nnFigs/neuron_model.png){width=80%}
 
+## Introduction to Neural Networks
+\Large
+The pieces of a neuron:
+
+- **Inputs** $x_1,\ldots,x_N$ --- the predictors
+- **Weights** $w_1,\ldots,w_N$ **and bias** $b$ --- adjustable parameters, summed into the net input
+- **Activation function** --- maps that sum to the output
+
+Learning = adjusting the weights and bias from the data.
 
 ## Introduction to Neural Networks
 \Large
-Here, $x_1,x_2,\ldots,x_N$ are input (predictor) variables, $w_1,w_2,\ldots,w_N$ are weights of respective inputs, $b$ is the bias, which is summed with the weighted inputs to form the net inputs. Bias and weights are both adjustable parameters of the (computational) neuron. 
+The **activation function** maps a neuron's weighted input to its output --- giving the network its **non-linearity** (often just one line of code):
 
-## Introduction to Neural Networks
-\Large
-Parameters are adjusted using learning rules trained on the $x$s. Once the weights and bias are determined, a mapping function or mechanism processes or connects the input and output of the neuron. This mechanism of mapping inputs to output is known as the **activation function**.
-
-## Introduction to Neural Networks
-The **activation function** defines the output of a neuron in terms of a local induced field. The activation function (often a single line of code!) can give the neural net non-linearity and expressiveness. Here are some examples:
-
-* \underline{Identity}: A linear operator in vector that maps input to the same output value.
-* \underline{Binary Step}: If the value of the (weigthed) input signal is above a certain threshold, the output is true (or activated), and otherwise false (or not activated). It is very useful as a binary classifier.
-* \underline{Sigmoid}: Or \underline{S-shaped}: Logistic and hyperbolic tangent functions are used sigmoid functions, used for binary classification or continuous/probabilistic outputs
-* \underline{Ramp} or \underline{ReLU}: Derived from the appearance of its graph, e.g,. maps negative inputs to 0 and positive inputs to the same (identity) output. _ReLu_ stands for 'Rectified Linear unit'. 
+- **Identity** --- output = input (linear)
+- **Binary step** --- on/off above a threshold (classifier)
+- **Sigmoid / tanh** --- smooth S-curve for probabilities
+- **ReLU** --- $\max(0,x)$; the modern default
 
 ## Introduction to Neural Networks
 \center
@@ -324,17 +321,17 @@ NeuralNetTools::plotnet(nn_caret)
 
 ## Introduction to Neural Networks
 \Large
-**Neural networks** (or **artificial neural networks**) have the ability to learn by examples, or from training data. Neural networks follow a _non-linear_ path that processes information through a complex adaptive system--by adjusting weights of inputs using a complex _network_ of artificial neurons. 
+Modern neural networks **learn by example** from training data --- adjusting weights across a network of artificial neurons to capture **non-linear** patterns.
+
+- Best for tasks easy for humans but hard to program: **pattern recognition**
+- Applications: image classification (cats vs. dogs), OCR, object detection
 
 ## Introduction to Neural Networks
 \Large
-_Neural networks_ where designed to solve problems which are easy for humans and difficult for machines. For example distinguising between pictures of cats and dogs. These problems are often referred to as pattern recognition. Current applications for neural network range from optical character recognition to object detection.
+Two common architectures:
 
-## Introduction to Neural Networks
-\Large
-Two of the more common artificial neural networks are: **feedforward** and **feedback** neural networks. 
-
-A _feedforward neural network_ is a network which is non-recursive: neurons in each layer are only connected to neurons in the next layer--signals only travel in one direction towards the output layer.
+- **Feedforward** --- non-recursive; signals travel one way, layer to layer, toward the output
+- **Feedback (recurrent)** --- contains loops; signals travel in both directions
 
 ## Recurrent Neural Networks (RNNs)
 \Large
@@ -359,23 +356,19 @@ There are many other formulations of **deep learning** neural networks:
 
 ## Convolutional Neural Networks
 \Large
-In deep learning, a **convolutional neural network** (**CNN**, or **ConvNet**) is a class of artificial neural network, most commonly applied to analyze visual imagery.
+A **CNN** (ConvNet) is a neural network specialized for **grid-like data** such as images:
 
-CNNs are also known as **Shift Invariant** or **Space Invariant Artificial Neural Networks**, based on the shared-weight architecture of the convolution kernels or filters that slide along input features and provide **translation-equivariant** responses known as feature maps.
-
-## Convolutional Neural Networks
-\Large
-CNNs have applications in image and video recognition, recommender systems, image classification/segmentation, medical image analysis, natural language processing, brain–computer interfaces, and financial time series.
+- **Shared-weight filters (kernels)** slide across the input $\rightarrow$ **feature maps**
+- **Translation-invariant**: finds a pattern anywhere in the image
+- Builds complexity hierarchically --- a **regularized** form of an MLP
 
 ## Convolutional Neural Networks
 \Large
-CNNs are regularized versions of multilayer perceptrons. CNNs often take a different approach towards regularization: they utilize the hierarchical pattern in data and assemble patterns of increasing complexity using smaller and simpler patterns embossed in their filters. Therefore, on a scale of connectivity and complexity, CNNs are on the lower extreme.
+- **Filters are learned automatically** --- no hand-engineering
+- Applications: image \& video recognition, classification \& segmentation, medical imaging, NLP, time series
 
-## Convolutional Neural Networks
-\Large
-The network learns to optimize the filters (or kernels) through automated learning--no prior knowledge and human intervention.
-
-![](nnFigs/Typical_cnn.png)
+\center
+![](nnFigs/Typical_cnn.png){width=90%}
 
 
 ## Convolutional Neural Networks
