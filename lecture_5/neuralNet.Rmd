@@ -38,6 +38,21 @@ img_path <- "nnFigs/"
 ##
 \vfill
 \begin{center}
+{\huge\itshape ``Biology / Biomedicine is a Data Science.''}
+
+\vspace{0.6cm}
+
+{\large --- W. Evan Johnson}
+
+\vspace{0.4cm}
+
+{\large\itshape Addendum: don't avoid the math!}
+\end{center}
+\vfill
+
+##
+\vfill
+\begin{center}
 {\huge\itshape ``With great power comes great responsibility.''}
 
 \vspace{0.8cm}
@@ -66,13 +81,24 @@ Everything we build today --- including the neural networks in this lecture --- 
 ##
 \vfill
 \begin{center}
-{\huge\itshape ``AI is not magic; it's math.''}
+{\huge\itshape ``AI will not replace us, it will amplify us.''}
 
 \vspace{0.8cm}
 
-{\large --- Peter Norvig}
+{\large --- Pedro Domingos}
 \end{center}
 \vfill
+
+## Real (Human) Intelligence
+\Large
+The ability to think, choose, create, understand meaning, and act with moral responsibility:
+
+- **Agency** --- we choose
+- **Moral judgment** --- right vs. wrong
+- **Creativity** --- truly new ideas
+- **Understanding meaning**
+- **Empathy and relationships**
+- **Spiritual capacity**
 
 ## Introduction to Neural Networks
 \Large
@@ -151,6 +177,17 @@ Training a network means finding the **weights** that make its predictions match
 2. **Backpropagation**: how does each weight affect the loss?
 3. **Gradient descent**: nudge each weight to reduce the loss.
 
+##
+\vfill
+\begin{center}
+{\huge\itshape ``AI is not magic; it's math.''}
+
+\vspace{0.8cm}
+
+{\large --- Peter Norvig}
+\end{center}
+\vfill
+
 ## The Chain Rule
 \center
 ![](nnFigs/chain_rule.jpeg){width=70%}
@@ -171,7 +208,7 @@ The chain rule lets us send the error **backward** through the network and compu
 \Large
 Each step adjusts the weights in the direction that **decreases the loss**, iterating until it converges to a minimum:
 \center
-![](nnFigs/gradient_descent.png){width=50%}
+![](nnFigs/gradient_descent.png){height=58%}
 
 ## Multilayer Perceptron Neural Network in R
 Suppose we have students' technical knowledge (TKS), communication skill score (CSS), and placement status (Placed):
@@ -423,7 +460,7 @@ And as a classifier:
 
 ## RNN for Language Translation
 \center
-![](nnFigs/recurrent_nn_decoder.png){width=80%}
+![](nnFigs/recurrent_nn_decoder.png){height=62%}
 
 ## From RNNs to Transformers
 \Large
@@ -491,32 +528,6 @@ ChatGPT is, in essence, a *very advanced autocomplete.*
 \center
 ![](nnFigs/transformers.png){height=70%}
 
-
-##
-\vfill
-\begin{center}
-{\huge\itshape ``AI will not replace us, it will amplify us.''}
-
-\vspace{0.8cm}
-
-{\large --- Pedro Domingos}
-\end{center}
-\vfill
-
-##
-\vfill
-\begin{center}
-{\huge\itshape ``Biology / Biomedicine is a Data Science.''}
-
-\vspace{0.6cm}
-
-{\large --- W. Evan Johnson}
-
-\vspace{0.4cm}
-
-{\large\itshape Addendum: don't avoid the math!}
-\end{center}
-\vfill
 
 ## Session Info
 \tiny
