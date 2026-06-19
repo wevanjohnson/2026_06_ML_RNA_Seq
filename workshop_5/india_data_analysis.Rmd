@@ -15,15 +15,43 @@ editor_options:
 ## Introduction
 Now its time to practice what we have learned in class and learn even more! For this homework project you will do an RNA-seq analysis of a [TB/Malnutrition dataset](https://www.frontiersin.org/journals/immunology/articles/10.3389/fimmu.2022.1011166/full). 
 
-<!-- 
-## Batch correction
-```{r, eval=F, include=F}
+```{r setup, include=F}
 library(SummarizedExperiment)
 library(sva)
 library(TBSignatureProfiler)
+```
 
-indata <- readRDS("~/Desktop/indata.rds")
 
+## Now get started
+Begin by reading the `indata.rds` file: 
+
+```{r}
+suppressMessages({library(SummarizedExperiment)})
+indata <- readRDS("indata.rds")
+assays(indata)
+```
+
+
+## Analysis steps: 
+
+1.\  Preprocess these data by removing any genes with zero expression for all samples, and by generating a log counts per million assay. Make a two dimensional table for TB status and malnutrition status. 
+
+```{r, eval=F, include=F}
+# Remove genes with all zero counts
+keep <- rowSums(assay(indata,"counts")) > 0
+sum(!keep) ## answer!
+indata <- indata[keep, ]
+
+# Table 
+table(colData(indata)[,2:3])
+
+# Table by barch
+table(colData(indata)[,2:4])
+```
+  
+2.\  Remove batch effects using ComBat-Seq. Create a new counts matrix assay named `combat`. Also generate log, cpm, and log cpm assays (hint, use the `mkAssay` function in the `TBSignatureProfiler`)
+
+```{r, eval=F, include=F }
 batch <- indata$batch
 covs <- model.matrix(~colData(indata)$Tb_status + colData(indata)$bmi_cat2)
 
@@ -35,39 +63,12 @@ assay(indata, "combat") <- combat_counts
 indata <- mkAssay(indata, input_name = "combat",log = TRUE, 
                      counts_to_CPM = TRUE)
 assays(indata)
-saveRDS(indata, "~/Desktop/combat_indata.rds")
-```
--->
-
-Begin by reading the `indata.rds` file: 
-
-```{r}
-suppressMessages({library(SummarizedExperiment)})
-indata <- readRDS("combat_indata.rds")
-assays(indata)
+#saveRDS(indata, "~/Desktop/combat_indata.rds")
 ```
 
-Please use the batch corrected `combat` (counts) and `log_combat_cpm` (log cpm) assays for your analyses. 
+Please use the batch corrected `combat` (counts) and `log_combat_cpm` (log cpm) assays for the rest of your analyses. 
 
-## Analysis steps: 
-
-
-1.\  Preprocess these data by removing any genes with zero expression for all samples, and by generating a log counts per million assay. Make a two dimensional table for TB status and malnutrition status. 
-
-```{r, eval=F, include=F}
-# Remove genes with all zero counts
-keep <- rowSums(assay(indata,"combat")) > 0
-sum(!keep) ## answer!
-indata <- indata[keep, ]
-
-# Table 
-table(colData(indata)[,2:3])
-
-# Table by barch
-table(colData(indata)[,2:4])
-```
-  
-2.\  Apply PCA and UMAP to your data and generate dimension reduction plots for the results. Use different colors for the TB and LTBI samples (`Tb_status`). Use different plotting symbols for malnourishment (`bmi_cat2`). Note that you should be using the log CPM values for this analysis. 
+3.\  Apply PCA and UMAP to your data and generate dimension reduction plots for the results. Use different colors for the TB and LTBI samples (`Tb_status`). Use different plotting symbols for malnourishment (`bmi_cat2`). Note that you should be using the log CPM values for this analysis. 
 
 ```{r, eval=F, include=F }  
 library(tidyverse)
@@ -92,7 +93,7 @@ umap_plot %>% ggplot(aes(x=X1, y=X2, color=Disease, shape=Nutrition)) +
   geom_point(size=1.5)
 ```
 
-3.\  Use `DESeq2` to do a differential expression analysis (on the counts) comparing the TB to the LTBI samples adjusting for BMI status. What are the most differentially expressed genes? 
+4.\  Use `DESeq2` to do a differential expression analysis (on the counts) comparing the TB to the LTBI samples adjusting for BMI status. What are the most differentially expressed genes? 
   
 
 ```{r, eval=F, include=F }  
@@ -103,7 +104,7 @@ res <- results(dds, contrast = c("Tb_status", "TB", "LTBI"))
 top_genes_deseq <- res[head(order(res$pvalue), 50),]
 ```
 
-4.\ Make a heatmap plot of the `DESeq2` results (top 50). Add a colorbar for disease and BMI status. 
+5.\ Make a heatmap plot of the `DESeq2` results (top 50). Add a colorbar for disease and BMI status. 
  
 ```{r, eval=F, include=F }  
 library(ComplexHeatmap)
@@ -116,7 +117,7 @@ ha = HeatmapAnnotation(df = df, col = list(Disease=c("TB"="red", "LTBI"="blue"),
 Heatmap(mat,show_row_names=F, show_column_names = F, top_annotation = ha)
 ```
   
-5.\ Conduct a pathway analysis of the top 50 DESeq2 genes using enrichR (through R or online). Use the "Reactome\_Pathways\_2024" database. What are the top scoring pathways? (Extra) Use the TBSignatureProfiler to analyze the data! 
+6.\ Conduct a pathway analysis of the top 50 DESeq2 genes using enrichR (through R or online). Use the "Reactome\_Pathways\_2024" database. What are the top scoring pathways? Use the TBSignatureProfiler to analyze the data! 
  
 
 ```{r, eval=F, include=F }  
@@ -150,7 +151,7 @@ signatureBoxplot(ssgsea_res, name="ssGSEA",
 ```
   
 
-6.\ Using the well-nourished samples as your training set, develop Elastic Net (logistic regression), SVM, and Random Forest predictors for TB status. Compare the cross-validation overall accuracy for these three methods. 
+7.\ Using the well-nourished samples as your training set, develop Elastic Net (logistic regression), SVM, and Random Forest predictors for TB status. Compare the cross-validation overall accuracy for these three methods. 
 
 ```{r, eval=F, include=F}
 ## Elastic Net
@@ -197,7 +198,7 @@ confusionMatrix(y_hat, train.labels)$overall["Accuracy"]
 ```
 
 
-7.\ Apply your biomarkers to the malnourished samples (as a validation set). How do your biomarkers perform? Should we develop biomarkers for the malnourished samples independently? 
+8.\ Apply your biomarkers to the malnourished samples (as a validation set). How do your biomarkers perform? Should we develop biomarkers for the malnourished samples independently? 
 
 ```{r, eval=F, include=F}
 test <- t(as.matrix(assay(indata,"log_combat_cpm"))[
@@ -222,7 +223,7 @@ rf.test <- confusionMatrix(y_hat, test.labels)$overall["Accuracy"]
 rf.test
 ```
 
-8.\ (Extra) Develop Elastic Net (logistic regression), SVM, and Random Forest predictors for TB status in the malnourished samples. How does the cross vaidation accuracy compare with the accuracies in 6 and 7? 
+9.\ Develop Elastic Net (logistic regression), SVM, and Random Forest predictors for TB status in the malnourished samples. How does the cross vaidation accuracy compare with the accuracies in 6 and 7? 
 
 ```{r, eval=F, include=F}
 

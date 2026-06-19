@@ -71,7 +71,7 @@ If the estimates can be restricted, penalized, or shrunk towards zero, then the 
 
 ## Regularization in Machine Learning
 \Large
-**Regularization** is the most used technique to penalize complex models in machine learning, it is deployed for reducing overfitting (or, contracting generalization errors) by putting small network weights into the model (adding a small amount of biad). Also, it enhances the performance of models for new inputs.\footnote{Source: https://www.analyticssteps.com/blogs/l2-and-l1-regularization-machine-learning}
+**Regularization** is the most used technique to penalize complex models in machine learning, it is deployed for reducing overfitting (or, contracting generalization errors) by putting small network weights into the model (adding a small amount of bias). Also, it enhances the performance of models for new inputs.\footnote{Source: https://www.analyticssteps.com/blogs/l2-and-l1-regularization-machine-learning}
 
 ## Regularization in Machine Learning
 \Large

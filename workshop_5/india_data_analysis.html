@@ -11,7 +11,7 @@
 
 <meta name="author" content="W. Evan Johnson" />
 
-<meta name="date" content="2026-06-16" />
+<meta name="date" content="2026-06-18" />
 
 <title>India Data Analysis</title>
 
@@ -1587,7 +1587,7 @@ border-radius: 0px;
 
 <h1 class="title toc-ignore">India Data Analysis</h1>
 <h4 class="author">W. Evan Johnson</h4>
-<h4 class="date">2026-06-16</h4>
+<h4 class="date">2026-06-18</h4>
 
 </div>
 
@@ -1597,48 +1597,52 @@ border-radius: 0px;
 <p>Now its time to practice what we have learned in class and learn even
 more! For this homework project you will do an RNA-seq analysis of a <a href="https://www.frontiersin.org/journals/immunology/articles/10.3389/fimmu.2022.1011166/full">TB/Malnutrition
 dataset</a>.</p>
-<!-- 
-## Batch correction
-
--->
+</div>
+<div id="now-get-started" class="section level2">
+<h2>Now get started</h2>
 <p>Begin by reading the <code>indata.rds</code> file:</p>
 <pre class="r"><code>suppressMessages({library(SummarizedExperiment)})
-indata &lt;- readRDS(&quot;combat_indata.rds&quot;)
+indata &lt;- readRDS(&quot;indata.rds&quot;)
 assays(indata)</code></pre>
-<pre><code>## List of length 8
-## names(8): counts log_counts counts_cpm ... log_combat combat_cpm log_combat_cpm</code></pre>
-<p>Please use the batch corrected <code>combat</code> (counts) and
-<code>log_combat_cpm</code> (log cpm) assays for your analyses.</p>
+<pre><code>## List of length 4
+## names(4): counts log_counts counts_cpm log_counts_cpm</code></pre>
 </div>
 <div id="analysis-steps" class="section level2">
 <h2>Analysis steps:</h2>
 <p>1.  Preprocess these data by removing any genes with zero expression
 for all samples, and by generating a log counts per million assay. Make
 a two dimensional table for TB status and malnutrition status.</p>
-<p>2.  Apply PCA and UMAP to your data and generate dimension reduction
+<p>2.  Remove batch effects using ComBat-Seq. Create a new counts matrix
+assay named <code>combat</code>. Also generate log, cpm, and log cpm
+assays (hint, use the <code>mkAssay</code> function in the
+<code>TBSignatureProfiler</code>)</p>
+<p>Please use the batch corrected <code>combat</code> (counts) and
+<code>log_combat_cpm</code> (log cpm) assays for the rest of your
+analyses.</p>
+<p>3.  Apply PCA and UMAP to your data and generate dimension reduction
 plots for the results. Use different colors for the TB and LTBI samples
 (<code>Tb_status</code>). Use different plotting symbols for
 malnourishment (<code>bmi_cat2</code>). Note that you should be using
 the log CPM values for this analysis.</p>
-<p>3.  Use <code>DESeq2</code> to do a differential expression analysis
+<p>4.  Use <code>DESeq2</code> to do a differential expression analysis
 (on the counts) comparing the TB to the LTBI samples adjusting for BMI
 status. What are the most differentially expressed genes?</p>
-<p>4. Make a heatmap plot of the <code>DESeq2</code> results (top 50).
+<p>5. Make a heatmap plot of the <code>DESeq2</code> results (top 50).
 Add a colorbar for disease and BMI status.</p>
-<p>5. Conduct a pathway analysis of the top 50 DESeq2 genes using
+<p>6. Conduct a pathway analysis of the top 50 DESeq2 genes using
 enrichR (through R or online). Use the “Reactome_Pathways_2024”
-database. What are the top scoring pathways? (Extra) Use the
-TBSignatureProfiler to analyze the data!</p>
-<p>6. Using the well-nourished samples as your training set, develop
+database. What are the top scoring pathways? Use the TBSignatureProfiler
+to analyze the data!</p>
+<p>7. Using the well-nourished samples as your training set, develop
 Elastic Net (logistic regression), SVM, and Random Forest predictors for
 TB status. Compare the cross-validation overall accuracy for these three
 methods.</p>
-<p>7. Apply your biomarkers to the malnourished samples (as a validation
+<p>8. Apply your biomarkers to the malnourished samples (as a validation
 set). How do your biomarkers perform? Should we develop biomarkers for
 the malnourished samples independently?</p>
-<p>8. (Extra) Develop Elastic Net (logistic regression), SVM, and Random
-Forest predictors for TB status in the malnourished samples. How does
-the cross vaidation accuracy compare with the accuracies in 6 and 7?</p>
+<p>9. Develop Elastic Net (logistic regression), SVM, and Random Forest
+predictors for TB status in the malnourished samples. How does the cross
+vaidation accuracy compare with the accuracies in 6 and 7?</p>
 </div>
 
 
