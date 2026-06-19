@@ -568,6 +568,13 @@ grid.arrange(p2, p1, nrow=1)
 - `caret::varImp()` extracts it from any supported model
 
 
+## Acknowledgments
+\large
+Examples, figures, and several explanations are adapted from R. A. Irizarry, *Introduction to Data Science* (the `dslabs` book) --- licensed CC BY-NC-SA.
+
+\vspace{0.4cm}
+This deck was edited by Claude AI.
+
 ## Session Info
 \tiny
 ```{r session}
