@@ -78,17 +78,6 @@ Where do neural networks fit in the broader AI landscape?
 \vspace{0.3cm}
 Everything we build today --- including the neural networks in this lecture --- is **Narrow AI**.
 
-##
-\vfill
-\begin{center}
-{\huge\itshape ``AI will not replace us, it will amplify us.''}
-
-\vspace{0.8cm}
-
-{\large --- Pedro Domingos}
-\end{center}
-\vfill
-
 ## Real (Human) Intelligence
 \Large
 The ability to think, choose, create, understand meaning, and act with moral responsibility:
@@ -99,6 +88,17 @@ The ability to think, choose, create, understand meaning, and act with moral res
 - **Understanding meaning**
 - **Empathy and relationships**
 - **Spiritual capacity**
+
+##
+\vfill
+\begin{center}
+{\huge\itshape ``AI will not replace us, it will amplify us.''}
+
+\vspace{0.8cm}
+
+{\large --- Pedro Domingos}
+\end{center}
+\vfill
 
 ## Introduction to Neural Networks
 \Large
